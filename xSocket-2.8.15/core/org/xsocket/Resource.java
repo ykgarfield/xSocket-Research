@@ -25,12 +25,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
-
-
-
-
 /**
+ * 标记应用程序需要的一个资源.	</br>
+ * 
  * The Resource annotation marks a resource that is required
  * by the application. 
  * 

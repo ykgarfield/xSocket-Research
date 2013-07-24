@@ -35,6 +35,8 @@ interface IIoAcceptorCallback {
 	/**
 	 * 提醒acceptor已经绑定到socket,可以接受连接.	</br></br>
 	 * 
+	 * Server启动时将会调用.		</br>
+	 * 
 	 * notifies that the acceptor has been bound to the socket, and 
 	 * accepts incoming connections
 	 */

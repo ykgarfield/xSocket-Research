@@ -27,8 +27,9 @@ import java.lang.annotation.Target;
 
 /**
  * 定义了一个方法是否应该在多线程环境中被调用.</br>
- * 这个annotation可以用来声明一个回调方法希望执行的方式.
- * 比如onConnect或者onData方法.xSocket自由地去一个一个NONTHREADED-标记的方法在多线程模式中.
+ * 这个annotation可以用来声明一个回调方法希望执行的方式.	</br>
+ * 比如onConnect或者onData方法.xSocket自由地去一个一个NONTHREADED-标记的方法在多线程模式中.		</br>
+ * 如果类的注解和方法的注解不一致会有什么样的结果?
  * </br></br>
  * 
  * Annotation which defines if a method <i>should</i> be called in 

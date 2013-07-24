@@ -39,7 +39,7 @@ import org.xsocket.DataConverter;
 
 /**
  * 负责接收连接和注册到dispatcher中	</br>
- * accept()		</br>
+ * accept()、listen()		</br>
  * 
  * The acceptor is responsible to accept new incoming connections, and
  * register these on the dispatcher.<br><br>
@@ -64,6 +64,7 @@ final class IoAcceptor  {
 
     // io handler
     // 构造函数中设置
+    /** {@link Server.LifeCycleHandler} */
     private IIoAcceptorCallback callback;
 
     
@@ -245,14 +246,15 @@ final class IoAcceptor  {
 
                 // create IoSocketHandler
                 // 取出一个IoSocketDispatcher
+                // 默认情况只创建两个IoSocketDispatcher
                 IoSocketDispatcher dispatcher = dispatcherPool.nextDispatcher();
                 // SocketChannel设置为非阻塞
                 // IoSocketHandler
                 IoChainableHandler ioHandler = ConnectionUtils.getIoProvider().createIoHandler(false, dispatcher, channel, sslContext, sslOn);
 
                 // notify call back
-                /** {@link Server.LifeCycleHandler} */
                 // XXX 注册OP_READ事件
+                /** {@link Server.LifeCycleHandler} */
                 callback.onConnectionAccepted(ioHandler);
     			acceptedConnections++;
 

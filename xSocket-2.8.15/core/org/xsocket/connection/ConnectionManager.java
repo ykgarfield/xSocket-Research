@@ -52,6 +52,7 @@ final class ConnectionManager {
 	
 	
     // watch dog
+	// 默认监视连接间隔时间：1分钟
     private static final long DEFAULT_WATCHDOG_PERIOD_CONNECTION_CHECK_MILLISTION_CHECK_MILLIS =  1L * 60L * 1000L;
     private long watchDogPeriodConCheckMillis = DEFAULT_WATCHDOG_PERIOD_CONNECTION_CHECK_MILLISTION_CHECK_MILLIS;
     private WachdogTask conCheckWatchDogTask = null;
@@ -223,10 +224,9 @@ final class ConnectionManager {
                 conCheckWatchDogTask = null;
                 tt.cancel();
             }
-
-
             
             // create and run new watchdog task
+            // XXX 创建和运行一个新的watchdog任务
             conCheckWatchDogTask = new WachdogTask();
             IoProvider.getTimer().schedule(conCheckWatchDogTask, watchDogPeriodConCheckMillis, watchDogPeriodConCheckMillis);
             

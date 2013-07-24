@@ -34,9 +34,8 @@ import org.xsocket.ILifeCycle;
 import org.xsocket.MaxReadSizeExceededException;
 import org.xsocket.SerializedTaskQueue;
 
-
 /**
-*
+* 保存了IHandler实现类和其信息.	</br>
 * @author grro@xsocket.org
 */
 class HandlerAdapter  {
@@ -64,8 +63,8 @@ class HandlerAdapter  {
 	static HandlerAdapter newInstance(IHandler handler) {
 		if (handler == null) {
 			return NULL_HANDLER_ADAPTER;
-			
 		} else {
+			// IHandler实现类的信息
 			IHandlerInfo handlerInfo = ConnectionUtils.getHandlerInfo(handler);
 			return new HandlerAdapter(handler, handlerInfo);
 		}
@@ -601,6 +600,7 @@ class HandlerAdapter  {
 	
 	
 	public final void onInit() {
+		// 是否实现了ILifeCycle接口
 		if (handlerInfo.isLifeCycle()) {
 			((ILifeCycle) handler).onInit();
 		}		

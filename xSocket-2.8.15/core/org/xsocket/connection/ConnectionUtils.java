@@ -674,7 +674,9 @@ public final class ConnectionUtils {
 		return Collections.synchronizedMap(new MapCache<T>(maxSize));
 	}
 	
-	
+	/**
+	 * 注入服务器的字段,默认情况下不会在IHander实现中声明IServer或者Server字段	</br>
+	 */
 	static void injectServerField(Server server, Object handler) {
 		
 		Field[] fields = handler.getClass().getDeclaredFields();
@@ -762,7 +764,7 @@ public final class ConnectionUtils {
 
 
     /**
-     * Handler信息
+     * IHandler实现类信息
      */
 	static IHandlerInfo getHandlerInfo(IHandler handler) {
 	    if (handler instanceof HandlerChain) {
@@ -794,6 +796,9 @@ public final class ConnectionUtils {
     }
     
 	
+    /**
+     * 方法上没有Execution,则和类的Execution一致.		</br>
+     */
 	private static boolean isMethodThreaded(Class clazz, String methodname, boolean dflt, Class... paramClass) {
 		try {
 			Method meth = clazz.getMethod(methodname, paramClass);
@@ -813,17 +818,20 @@ public final class ConnectionUtils {
 		}
 	}
 	
+	/**
+	 * IoHandler的实现是否加了注解Execution,如果加了,是否为MULTITHREADED
+	 */
 	private static boolean isHandlerMultithreaded(Object handler) {
 		Execution execution = handler.getClass().getAnnotation(Execution.class);
 		if (execution != null) {
 			if(execution.value() == Execution.NONTHREADED) {
 				return false;
-				
 			} else {
 				return true;
 			}
 
 		} else {
+			// 类上没有注解Execution,默认为多线程模式,返回true
 			return true;
 		}
 	}
@@ -848,7 +856,8 @@ public final class ConnectionUtils {
 	
 	
 	/**
-	 * Handler信息
+	 * Handler信息, 实现的业务逻辑处理是否实现了某些接口.
+	 * 覆盖接口的方法时是否加了注解Execution </br>
 	 */
 	private static final class HandlerInfo implements IHandlerInfo {
 		
@@ -862,6 +871,8 @@ public final class ConnectionUtils {
 		
 		private boolean isConnectionScoped = false;
 		
+		private boolean isUnsynchronized = false;
+		
 		private boolean isHandlerMultithreaded = false;
 		private boolean isConnectHandlerMultithreaded = false;
 		private boolean isDataHandlerMultithreaded = false;
@@ -870,8 +881,6 @@ public final class ConnectionUtils {
 		private boolean isConnectionTimeoutHandlerMultithreaded = false;
 		private boolean isConnectExceptionHandlerMultithreaded = false;
 		
-		private boolean isUnsynchronized = false;
-
 		HandlerInfo(IHandler handler) {
 			isConnectHandler = (handler instanceof IConnectHandler);
 			isDataHandler = (handler instanceof IDataHandler);

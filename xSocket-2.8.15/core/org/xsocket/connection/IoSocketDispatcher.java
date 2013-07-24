@@ -248,7 +248,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 				 * 此时是不会注册OP_WRITE事件的.
 				 */
 				if (eventCount > 0) {
-					// 处理读写事件
+					// XXX 处理读写事件
 					handleReadWriteKeys();
 				}
 

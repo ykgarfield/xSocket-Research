@@ -81,6 +81,7 @@ public class Server implements IServer {
 	
 
 	// is open flag
+	/** {@link Server.LifeCycleHandler#onConnected()} 将设置为true */
 	private final AtomicBoolean isOpen = new AtomicBoolean(false);
 
 	// name
@@ -95,6 +96,8 @@ public class Server implements IServer {
 
 	
 	//connection manager
+	// XXX 创建Watchdog任务
+	/** {@link ConnectionManager.WachdogTask}*/
 	private ConnectionManager connectionManager = new ConnectionManager();
 	// 最大并发连接数
 	private int maxConcurrentConnections = Integer.MAX_VALUE;
@@ -124,7 +127,7 @@ public class Server implements IServer {
 	// server listeners
 	// 服务器监听,可自定义实现并设置到Server类中
 	/** {@link Server#addListener(IServerListener)} */
-	// 将在LifeCycleHandler类中执行
+	/** {@link Server.LifeCycleHandler#onConnected()} 中执行*/
 	private final ArrayList<IServerListener> listeners = new ArrayList<IServerListener>();
 
 	// local address
@@ -517,7 +520,8 @@ public class Server implements IServer {
 
 
 	/**
-	 * 设置逻辑处理器	</br>
+	 * 设置逻辑处理器,构造方法中调用.	</br>
+	 * 可以在Server启动后再次设置IHandler.这将覆盖在构造函数中设置的IHandler. </br></br>
 	 * 
 	 * set the handler 
 	 * @param handler the handler
@@ -525,8 +529,11 @@ public class Server implements IServer {
     public void setHandler(IHandler handler) {
         // 默认false
         // isOpen默认为false,在实例化Server的时候也不会改变这个值
+    	/* {@link Server.LifeCycleHandler#onConnected} 将设置isOpen为true 
+    	 * 也就是在执行了Server.start()之后isOpen()值才会设置为true.
+    	 * */
 		if (isOpen.get()) {
-			// TODO
+			// 可以在执行了Server.start()之后重新设置IHander的实现
 			callCurrentHandlerOnDestroy();
 		}
 		
@@ -548,9 +555,10 @@ public class Server implements IServer {
         initCurrentHandler();
 	}
     
-	
+	// 初始化当前的IHandler
 	private void initCurrentHandler() {
 		ConnectionUtils.injectServerField(this, handlerAdapter.getHandler());
+		// 如果实现而来ILifeCycle接口,那么将调用其onInit()方法. 一般不实现此接口
 		handlerAdapter.onInit();
 	}
 	
@@ -1109,6 +1117,7 @@ public class Server implements IServer {
         @SuppressWarnings("unchecked")
         @Override
 		public void onConnected() {
+        	// 服务已启动
 			isOpen.set(true);
 			
 	        // notify listeners

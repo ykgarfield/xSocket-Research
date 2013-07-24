@@ -20,16 +20,18 @@
  */
 package org.xsocket.connection;
 
-
-
 /**
+ * handler信息.	</br>
+ * 
  * handler info
  * 
  * @author grro@xsocket.org
  */
 interface IHandlerInfo {
 
-
+	/**
+	 * 是否实现了指定的接口
+	 */
     boolean isConnectHandler();
 
     boolean isDataHandler();
@@ -39,15 +41,21 @@ interface IHandlerInfo {
     boolean isIdleTimeoutHandler();
 
     boolean isConnectionTimeoutHandler();
+    
+    boolean isConnectExceptionHandler() ;
         
     boolean isLifeCycle();
-
+    
+    
     boolean isConnectionScoped();
 
-    boolean isConnectExceptionHandler() ;
-
+    
     boolean isUnsynchronized();
     
+    
+    /**
+     * 实现的接口的方法是否为多线程模式
+     */
     boolean isConnectExceptionHandlerMultithreaded();
 
     boolean isConnectHandlerMultithreaded();
