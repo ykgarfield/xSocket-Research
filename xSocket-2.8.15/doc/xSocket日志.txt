@@ -1,0 +1,4 @@
+  xSocket内部使用的是JDK Log.
+
+   这里我们将jdk1.6.0_16\jre\lib\logging.properties拷贝到项目中.
+   可以使用JdkLogInit#init()方法对日志配置,覆盖jdk1.6.0_16\jre\lib\logging.properties的配置信息.
