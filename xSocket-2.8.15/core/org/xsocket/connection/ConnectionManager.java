@@ -233,7 +233,9 @@ final class ConnectionManager {
         }
 	}	
 	
-	
+	/**
+	 * 监视器任务 
+	 */
 	private final class WachdogTask extends TimerTask {
         
         @Override

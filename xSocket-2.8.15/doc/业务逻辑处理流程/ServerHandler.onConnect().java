@@ -16,9 +16,10 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 => IoSocketHandler#onRegisteredEvent()
 => NonBlockingConnection.IoHandlerCallback#onConnect()
 => NonBlockingConnection#onConnect();
-=> HandlerAdapter#onConnect()
-=> HandlerAdapter#performOnConnect(INonBlockingConnection, SerializedTaskQueue, IConnectHandler)
-	(// 这里参数中的IConnectHandler也就是我们实现的业务逻辑处理类ServerHandler)
+=> HandlerAdapter#onConnect(final INonBlockingConnection connection, final SerializedTaskQueue taskQueue, final Executor workerpool, boolean isUnsynchronized)
+=> taskQueue.performMultiThreaded(Runnable task, Executor workerpool)及执行的
+   taskQueue.performMultiThreaded(new PerformOnConnectTask(connection, taskQueue, (IConnectHandler) handler), workerpool);
+	(// 这里参数中的handler也就是我们实现的业务逻辑处理类ServerHandler)
 => handler.onConnect(connection);
 	(// 执行ServerHandler.onConnect(connection)).
 			

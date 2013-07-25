@@ -86,16 +86,18 @@ class HandlerAdapter  {
 	   
     
     public boolean onConnect(final INonBlockingConnection connection, final SerializedTaskQueue taskQueue, final Executor workerpool, boolean isUnsynchronized) throws IOException, BufferUnderflowException, MaxReadSizeExceededException {
-
+    	// 是否实现了IConnectHandler接口
         if (handlerInfo.isConnectHandler()) {
     
             if (handlerInfo.isUnsynchronized() || (!getHandlerInfo().isConnectHandlerMultithreaded() && ConnectionUtils.isDispatcherThread())) { 
                 performOnConnect(connection, taskQueue, (IConnectHandler) handler);
                 
             } else {
+            	// 默认执行这里(一般情况不实现IUnsynchronized接口,且不加Execution注解)
                 if (getHandlerInfo().isConnectHandlerMultithreaded()) {
+                	// 由线程池执行PerformOnConnectTask任务
                     taskQueue.performMultiThreaded(new PerformOnConnectTask(connection, taskQueue, (IConnectHandler) handler), workerpool);
-                    
+                
                 } else {
                     if (isUnsynchronized) {
                         performOnConnect(connection, taskQueue, (IConnectHandler) handler);
@@ -112,7 +114,9 @@ class HandlerAdapter  {
     }
     
     
-    
+    /**
+     * 执行连接任务
+     */
     private static final class PerformOnConnectTask implements Runnable {
 
     	private final IConnectHandler handler;
@@ -126,7 +130,7 @@ class HandlerAdapter  {
             this.handler = handler;
         }
         
-        
+        @Override
         public void run() {
             performOnConnect(connection, taskQueue, handler);
         }
@@ -137,6 +141,7 @@ class HandlerAdapter  {
     private static boolean performOnConnect(INonBlockingConnection connection, SerializedTaskQueue taskQueue, IConnectHandler handler) {
         
         try {
+        	// XXX 执行真正的连接逻辑
             handler.onConnect(connection);
             
         } catch (MaxReadSizeExceededException mee) {

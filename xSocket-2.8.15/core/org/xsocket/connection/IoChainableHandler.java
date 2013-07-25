@@ -260,6 +260,9 @@ abstract class IoChainableHandler  {
 	}
 
 
+	/**
+	 * {@link IoSocketHandler#init(IIoHandlerCallback)}	处进行设置	</br>
+	 */
 	void setPreviousCallback(IIoHandlerCallback callback) {
 		this.callback = callback;
 	}

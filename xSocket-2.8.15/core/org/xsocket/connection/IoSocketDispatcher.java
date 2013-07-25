@@ -55,7 +55,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
     static final String DISPATCHER_PREFIX = "xDispatcher";
 	
 	// queues
-	private final ConcurrentLinkedQueue<Runnable> registerQueue = new ConcurrentLinkedQueue<Runnable>();
+	private final ConcurrentLinkedQueue<Runnable> registerQueue = new ConcurrentLinkedQueue<Runnable>();	// RegisterTask
 	private final ConcurrentLinkedQueue<IoSocketHandler> deregisterQueue = new ConcurrentLinkedQueue<IoSocketHandler>();
 	private final ConcurrentLinkedQueue<Runnable> keyUpdateQueue = new ConcurrentLinkedQueue<Runnable>();
 
@@ -89,7 +89,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
     private long statisticsStartTime = System.currentTimeMillis();
     private long countIdleTimeouts = 0;
     private long countConnectionTimeouts = 0;
-	private long handledRegistractions = 0;
+	private long handledRegistractions = 0;	// 处理的注册次数
 	private long handledReads = 0;		// 处理读的次数
 	private long handledWrites = 0;		// 处理写的次数
 
@@ -235,8 +235,12 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 				// 此selector不处理OP_ACCEPT事件
 				// Selector中也不会注册OP_ACCEPT事件
 				// 只处理OP_READ、OP_WRITE事件
+				// 会被register()方法处被唤醒而立即返回
+				// 但此时还未执行OP_READ事件
 				int eventCount = selector.select(5000); 
 			
+				// 执行registerQueue中的RegisterTask任务
+				// RegisterTask任务中才会开始执行事件注册
 				handledTasks = performRegisterHandlerTasks();
 				//System.out.println("performRegisterHandlerTasks：" + handledTasks);
 				handledTasks += performKeyUpdateTasks();
@@ -391,20 +395,24 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	
 
 	/**
-	 * {@inheritDoc}
+	 * 注册读/写事件
 	 */
 	public boolean register(IoSocketHandler socketHandler, int ops) throws IOException {
 		assert (!socketHandler.getChannel().isBlocking());
 
 		socketHandler.setMemoryManager(memoryManager);
 
-		if (isDispatcherInstanceThread()) {
+		if (isDispatcherInstanceThread()) {	// false
 			registerHandlerNow(socketHandler, ops);
 		} else {
 		    if (LOG.isLoggable(Level.FINE)) {
 		        LOG.fine("[" + socketHandler.getId() + "] add new connection to register task queue");
 		    }
+		    // XXX 将RegisterTask任务加入到队列中, 此时并不执行任务
 			registerQueue.add(new RegisterTask(socketHandler, ops));
+			// 唤醒run()方法中执行selector.select(5000)的代码,让其立即返回
+			// 然后执行performRegisterHandlerTasks()
+			// 也就是执行上面registerQueue添加的任务
 			wakeUp();
 		}
 
@@ -412,7 +420,9 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	}
 
 
-	
+	/**
+	 * 注册事件任务
+	 */
 	private final class RegisterTask implements Runnable {
 
 		private final IoSocketHandler socketHandler;
@@ -423,7 +433,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 			this.ops = ops;
 		}
 		
-		
+		@Override
 		public void run() {
 			try {
 				registerHandlerNow(socketHandler, ops);
@@ -699,6 +709,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 				// 队列中不存在任务直接返回,结束循环
 				return handledTasks;
 			} else {
+				// RegisterTask
 				registerTask.run();
 				handledTasks++;
 			}

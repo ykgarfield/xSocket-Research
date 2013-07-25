@@ -529,7 +529,9 @@ final class IoProvider  {
 
 
     /**
-     * SocketChannel设置为非阻塞
+     * SocketChannel设置为非阻塞.		</br>
+     * 
+     * {@link IoAcceptor#accept()}
 	 */
     IoChainableHandler createIoHandler(boolean isClient, IoSocketDispatcher dispatcher, SocketChannel channel, SSLContext sslContext, boolean sslOn) throws IOException {
     	String connectionId = null;

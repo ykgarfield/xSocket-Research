@@ -100,12 +100,14 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
     	}
 	}
 
-
+	// 是否为服务器端
 	private final boolean isServerSide;
 
 	
 	// flags
+	// init()方法中设置为true
 	private final AtomicBoolean isOpen = new AtomicBoolean(true);
+	// 构造函数中设置为true
 	private final AtomicBoolean isConnected = new AtomicBoolean(false);
 	private final AtomicBoolean isSuspended = new AtomicBoolean(false);
 	private final Object disconnectedGuard = false;
@@ -898,15 +900,17 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 
 	/**
+	 * 服务器端构造.		</br>
+	 * {@link Server.LifeCycleHandler#onConnectionAccepted(IoChainableHandler)} 处被调用	</br>
+	 * 
 	 *  server-side constructor
 	 */
 	protected NonBlockingConnection(ConnectionManager connectionManager, HandlerAdapter hdlAdapter) throws IOException {
-	    
 		handlerAdapterRef.set(hdlAdapter);
 		
 		isServerSide = true;
-		
 		isConnected.set(true);
+		
 		timeoutMgmHandle = connectionManager.register(this);
 	}
 
@@ -2180,6 +2184,10 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 
 	/**
+	 * 业务处理端调用.	</br>
+	 * 比如	{@link helloworld.ServerHandler#onData(INonBlockingConnection)}	</br>
+	 * XXX 从这里才会去注册OP_WRITE事件.	</br></br>
+	 * 
 	 * {@inheritDoc}
 	 */
 	public void flush() throws ClosedChannelException, IOException {

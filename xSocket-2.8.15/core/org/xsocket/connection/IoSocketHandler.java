@@ -112,6 +112,8 @@ final class IoSocketHandler extends IoChainableHandler {
 	
 	
 	/**
+	 * {@link IoProvider#createIoHandler(boolean, IoSocketDispatcher, SocketChannel, SSLContext, boolean)} 处被调用.	</br>
+	 * 
 	 * constructor
 	 *
 	 * @param channel         the underlying channel
@@ -138,7 +140,9 @@ final class IoSocketHandler extends IoChainableHandler {
     
 
 	/**
-	 * XXX 注册OP_READ事件
+	 * XXX 注册OP_READ事件	</br>
+	 * 
+	 * @param callbackHandler IoHandlerCallback
 	 */
     public void init(IIoHandlerCallback callbackHandler) throws IOException, SocketTimeoutException {
     	setPreviousCallback(callbackHandler);
@@ -246,7 +250,9 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 	/**
-	 * {@link NonBlockingConnection.IoHandlerCallback#onConnect()}
+	 * 由  {@link IoSocketDispatcher#register(IoSocketHandler, int)} 处调用	</br>
+	 * 
+	 * 调用 {@link NonBlockingConnection.IoHandlerCallback#onConnect()}
 	 * */
 	void onRegisteredEvent() throws IOException {
 		boolean connected = isConnected.getAndSet(true);

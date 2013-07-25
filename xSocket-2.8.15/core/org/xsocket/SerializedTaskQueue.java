@@ -41,6 +41,7 @@ public final class SerializedTaskQueue  {
 	
 	private static final Logger LOG = Logger.getLogger(SerializedTaskQueue.class.getName());
 
+	// 任务队列
 	private final LinkedList<Runnable> multithreadedTaskQueue = new LinkedList<Runnable>();
 	
 	private final ReentrantLock processLock = new ReentrantLock(false);
@@ -106,9 +107,9 @@ public final class SerializedTaskQueue  {
 	 */
 	public void performMultiThreaded(Runnable task, Executor workerpool) {
 	
-		// add task to queue 
+		// add task to queue
+		// 将任务加入到队列
 		synchronized (multithreadedTaskQueue) {
-			
 			
 			// (Multithreaded) worker is not running
 			if (multithreadedTaskQueue.isEmpty()) {
@@ -132,19 +133,20 @@ public final class SerializedTaskQueue  {
 	}
 
 	
-	
-	
-	
-	
+	/**
+	 * 执行添加的任务
+	 */
 	private void performPendingTasks() {
 		
 		// lock process
 		processLock.lock();
 			
 		try {
+			// 处理所有的任务
 			// handle all pending tasks
 			while (true) {
 				
+				// 从队列中取得任务
 				// get task from queue
 				Runnable task = null;
 				
@@ -154,7 +156,7 @@ public final class SerializedTaskQueue  {
 					}
 				}
 	
-					
+				// 执行任务
 				// perform it
 				if (task != null) {
 					try {
@@ -185,6 +187,7 @@ public final class SerializedTaskQueue  {
 	
 	private final class MultithreadedTaskProcessor implements Runnable {
 		
+		@Override
 		public void run() {
 			performPendingTasks();
 		}

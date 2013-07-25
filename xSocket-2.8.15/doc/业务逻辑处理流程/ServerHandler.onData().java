@@ -1,8 +1,9 @@
 public class ServerHandler implements IDataHandler, IConnectHandler,
 		IIdleTimeoutHandler, IConnectionTimeoutHandler, IDisconnectHandler
 
-   IDataHandler#onConnect()执行流程：
-		
+   IDataHandler#onData()执行流程：
+=> IoSocketDispatcher.run()等待OP_READ事件(首先要等待有连接)
+=> 执行run()方法里的handleReadWriteKeys()处理读/写事件		
 => IoSocketHandler.onReadableEvent()
 => getPreviousCallback().onPostData()
 => NonBlockingConnection.IoHandlerCallback.onPostData()

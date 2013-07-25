@@ -91,6 +91,7 @@ public class Server implements IServer {
 	private IoAcceptor acceptor;
 	
 	// workerpool
+	// 构造函数中设置
 	private ExecutorService defaultWorkerPool;
 	private Executor workerpool;
 
@@ -110,6 +111,7 @@ public class Server implements IServer {
 
 	
 	// app handler
+    // 在构造函数中被处理
 	private HandlerAdapter handlerAdapter = HandlerAdapter.newInstance(null);
 	
 	
@@ -719,9 +721,8 @@ public class Server implements IServer {
 
 
 	/**
-	 * {@inheritDoc}
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public final Map<String, Class> getOptions() {
 		return acceptor.getOptions();
 	}
@@ -1228,7 +1229,9 @@ public class Server implements IServer {
 
 	        // .. not exceeded
 	        } else {
+	        	// 没有超过最大连接.创建一个新的connection
 	            // create a new connection 
+	        	// handlerAdapter在构造函数中经过处理
 	            NonBlockingConnection connection = new NonBlockingConnection(connectionManager, handlerAdapter.getConnectionInstance());
 	            init(connection, ioHandler);
 	        }
@@ -1252,9 +1255,10 @@ public class Server implements IServer {
 		    // set default flush properties
             connection.setAutoflush(autoflush);
             connection.setFlushmode(flushMode);
+            // 设置线程执行者
             connection.setWorkerpool(workerpool);
                 
-            // 初始化连接
+            // XXX 初始化连接
             // initialize the connection
             connection.init(ioHandler);
                 
