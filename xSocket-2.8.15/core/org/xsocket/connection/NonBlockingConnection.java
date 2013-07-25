@@ -2231,6 +2231,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
     		    }
     		    
     			ioHandler.write(bufs);
+    			// XXX 注册OP_WRITE事件
     		    ioHandler.flush();
     		}
 		}
@@ -2486,11 +2487,17 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 			NonBlockingConnection.this.onWriteException(ioException, data);
 		}
 		
+		/**
+		 * {@link IoSocketHandler#onReadableEvent()}} 处被调用
+		 */
 		@Override
 		public void onData(ByteBuffer[] data, int size) {
 			NonBlockingConnection.this.onData(data, size);
 		}
 		
+		/**
+		 * {@link IoSocketHandler#onReadableEvent()}} 处被调用
+		 */
 		@Override
 		public void onPostData() {
 			NonBlockingConnection.this.onPostData();

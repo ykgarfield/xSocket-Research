@@ -1,5 +1,5 @@
 /*
- * Copyright (c) xlightweb.org, 2006 - 2010. All rights reserved.
+* Copyright (c) xlightweb.org, 2006 - 2010. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,8 @@ import java.util.logging.Logger;
 import org.xsocket.DataConverter;
 
 /**
+ * 作为Selector的附件.		</br>
+ * 
  * init()		</br>
  * 
  * Socket based io handler
@@ -291,13 +293,14 @@ final class IoSocketHandler extends IoChainableHandler {
    
 		assert (Thread.currentThread().getName().startsWith(IoSocketDispatcher.DISPATCHER_PREFIX)) : "receiveQueue can only be accessed by the dispatcher thread";
 
-		long read = 0;
+		long read = 0;	// 读取的字节数目
 
 		// 从Socket中读取数据
 		// read data from socket
 		ByteBuffer[] received  = readSocket();
 
 		// handle the data
+		// 处理数据
 		if (received != null) {
 			int size = 0;
 			for (ByteBuffer byteBuffer : received) {
@@ -552,7 +555,7 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 	/**
-	 * 从Socket中读取数据
+	 * 从Socket中读取数据, 数组中只有1个元素
 	 */
 	private ByteBuffer[] readSocket() throws IOException {
 		assert (Thread.currentThread().getName().startsWith(IoSocketDispatcher.DISPATCHER_PREFIX)) : "receiveQueue can only be accessed by the dispatcher thread";
@@ -561,10 +564,11 @@ final class IoSocketHandler extends IoChainableHandler {
 		if (isOpen()) {
 	        ByteBuffer[] received = null;
 
-	        int read = 0;
+	        int read = 0;	// 读取的字节数目
 	        lastTimeReceivedMillis = System.currentTimeMillis();
 
 	        // 分配大小
+	        /** memoryManager 由{@link IoSocketDispatcher#updateDispatcher()} 处设置 */
 			ByteBuffer readBuffer = memoryManager.acquireMemoryStandardSizeOrPreallocated(8192);
 			int pos = readBuffer.position();
 			int limit = readBuffer.limit();
@@ -590,6 +594,7 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 			// handle read
+			// 处理读事件,可先看default,再看-1和0的情况
 			switch (read) {
 
 				// end-of-stream has been reached -> throw an exception

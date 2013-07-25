@@ -91,7 +91,7 @@ final class IoUnsynchronizedMemoryManager extends AbstractMemoryManager {
 				LOG.fine("recycling " + DataConverter.toFormatedBytesSize(buffer.remaining()));
 			}
 			freeBuffer = buffer;
-		}
+		} 
 	}
 	
 	
@@ -99,6 +99,7 @@ final class IoUnsynchronizedMemoryManager extends AbstractMemoryManager {
 	 * {@inheritDoc}
 	 */
 	public ByteBuffer acquireMemoryStandardSizeOrPreallocated(int standardSize) throws IOException {
+		// 默认true
 		if (isPreallocationMode()) {
 			preallocate();
 		} else {
@@ -112,20 +113,22 @@ final class IoUnsynchronizedMemoryManager extends AbstractMemoryManager {
 	}
 	
 
-	
-
 	/**
+	 * 预分配大小.		</br>
+	 * 
 	 * {@inheritDoc}
 	 */
 	public void preallocate() throws IOException {
 		if (isPreallocationMode()) {
 			
 			// sufficient size?
+			// 足够大小?
 			if ((freeBuffer != null) && (freeBuffer.remaining() >= getPreallocatedMinBufferSize())) {
 				return;
 			}
 				
 			// no, allocate new 
+			// 分配新的
 			freeBuffer = newBuffer(getPreallocationBufferSize());
 		}
 	}

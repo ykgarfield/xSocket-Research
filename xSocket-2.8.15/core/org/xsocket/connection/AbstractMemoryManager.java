@@ -69,6 +69,8 @@ abstract class AbstractMemoryManager {
 	
 
 	/**
+	 * 使用空闲的内存获取ByteBuffer	</br></br>
+	 * 
 	 * acquire ByteBuffer with free memory
 	 *
 	 * @param standardsize the standard size
@@ -183,10 +185,12 @@ abstract class AbstractMemoryManager {
 			buffer.position(buffer.position() - read);
 			
 			// slice the read data
+			// 子缓冲区,读取的数据
 			readData = buffer.slice();
 			
 			// preallocate mode? and does buffer contain remaining free data? -> recycle these
 			if (preallocate && (buffer.limit() < buffer.capacity())) {
+				// 重置属性
 				buffer.position(buffer.limit());
 				buffer.limit(buffer.capacity());
 			
@@ -200,10 +204,6 @@ abstract class AbstractMemoryManager {
 				recycleMemory(buffer);
 			}
 		}
-
-		
-
-		
 		
 		return readData;
 	}

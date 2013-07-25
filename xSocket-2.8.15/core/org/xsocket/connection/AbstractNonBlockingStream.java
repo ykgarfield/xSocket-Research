@@ -1486,9 +1486,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 		onPostAppend();
 	}
 	
-
 	
-
+	// 由子类覆盖
 	protected void onPostAppend() {
 		
 	}

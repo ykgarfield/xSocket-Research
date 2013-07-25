@@ -44,6 +44,7 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 		System.out.println("从客户端接收到 : " + data);
 		
 		nbc.write("--|server:receive data from client sucessful| -----");
+		// 触发OP_WRITE事件
 		nbc.flush();
 		return true;
 	}

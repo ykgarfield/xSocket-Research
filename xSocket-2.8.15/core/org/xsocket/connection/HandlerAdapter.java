@@ -199,6 +199,9 @@ class HandlerAdapter  {
     }   
 
 	
+    /**
+     * 执行onData()
+     */
     private static final class PerformOnDataTask implements Runnable {
     	
     	private final IDataHandler handler;
@@ -213,7 +216,7 @@ class HandlerAdapter  {
     		this.handler = handler;
 		}
     	
-    	
+    	@Override
         public void run() {
             performOnData(connection, taskQueue, ignoreException, handler);
         }
@@ -247,6 +250,7 @@ class HandlerAdapter  {
                     LOG.fine("[" + connection.getId() + "] calling onData method of handler " + printHandler(handler));
                 }
                 
+                // XXX 执行业务逻辑的onData()方法
                 handler.onData(connection);
 
                 if (version == connection.getReadBufferVersion()) {

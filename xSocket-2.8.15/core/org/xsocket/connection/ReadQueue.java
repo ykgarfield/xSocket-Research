@@ -393,7 +393,7 @@ final class ReadQueue {
 			
 			assert (!containsEmptyBuffer(bufs));
 			
-								
+			// 第一次为null
 			if (buffers == null) {
 				buffers = bufs;
 				currentSize = size;
