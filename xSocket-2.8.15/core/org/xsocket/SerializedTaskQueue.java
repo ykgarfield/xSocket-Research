@@ -27,9 +27,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-
-
 /**
  * Serialized Task Queue
  * 
@@ -46,8 +43,6 @@ public final class SerializedTaskQueue  {
 	
 	private final ReentrantLock processLock = new ReentrantLock(false);
 	private final MultithreadedTaskProcessor multithreadedTaskProcessor = new MultithreadedTaskProcessor();
-
-	
 
 	
 	/**
@@ -98,6 +93,8 @@ public final class SerializedTaskQueue  {
 	
 	
 	/**
+	 * 
+	 * 
 	 * process a task multi threaded synchronized by the internal task queue. The task will
 	 * be processed by a dedicated thread. The given worker pool <i>can</i> be used to perform this 
 	 * tasks (as well as other task of the queue).  
@@ -116,6 +113,7 @@ public final class SerializedTaskQueue  {
 				multithreadedTaskQueue.addLast(task);
 				
 				try {
+					// 队列中没有任务执行添加到队列然后执行
 					workerpool.execute(multithreadedTaskProcessor);
 				} catch (RejectedExecutionException ree) {
 					if (LOG.isLoggable(Level.FINE)) {
@@ -152,6 +150,7 @@ public final class SerializedTaskQueue  {
 				
 				synchronized (multithreadedTaskQueue) {
 					if (!multithreadedTaskQueue.isEmpty()) {
+						// 取出任务,不删除
 						task = multithreadedTaskQueue.get(0);
 					}
 				}
@@ -171,6 +170,7 @@ public final class SerializedTaskQueue  {
 	
 				// is queue empty?
 				synchronized (multithreadedTaskQueue) {			
+					// 移除任务
 					multithreadedTaskQueue.remove(task);					
 					if (multithreadedTaskQueue.isEmpty()) {
 						return;
@@ -183,12 +183,12 @@ public final class SerializedTaskQueue  {
 		}
 	}
 	
-
 	
 	private final class MultithreadedTaskProcessor implements Runnable {
 		
 		@Override
 		public void run() {
+			// 执行添加的任务
 			performPendingTasks();
 		}
 	}	

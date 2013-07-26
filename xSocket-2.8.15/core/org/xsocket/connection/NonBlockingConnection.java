@@ -105,9 +105,8 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 	
 	// flags
-	// init()方法中设置为true
 	private final AtomicBoolean isOpen = new AtomicBoolean(true);
-	// 构造函数中设置为true
+	// init()方法中设置为true
 	private final AtomicBoolean isConnected = new AtomicBoolean(false);
 	private final AtomicBoolean isSuspended = new AtomicBoolean(false);
 	private final Object disconnectedGuard = false;
@@ -1043,7 +1042,8 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 	
 	/**
-	 * 初始化连接
+	 * 初始化连接.	</br>
+	 * {@link Server.LifeCycleHandler#init(NonBlockingConnection, IoChainableHandler)}
 	 */
 	void init(IoChainableHandler ioHandler) throws IOException, SocketTimeoutException {
 		init(ioHandler, ioHandlerCallback);
@@ -1231,7 +1231,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 			if (LOG.isLoggable(Level.FINE)) {
 				LOG.fine("[" + getId() + "] adding " + size + " to read buffer");
 			}
-			appendDataToReadBuffer(data, size);
+			super.appendDataToReadBuffer(data, size);
 		}
 	}
 	
@@ -2066,7 +2066,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public Map<String, Class> getOptions() {
 		return ioHandler.getOptions();
 	}
@@ -2230,6 +2230,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
     		        }
     		    }
     		    
+    		    // IoSocketHandler
     			ioHandler.write(bufs);
     			// XXX 注册OP_WRITE事件
     		    ioHandler.flush();

@@ -378,7 +378,6 @@ final class ReadQueue {
 		}
 
 
-
 		/**
 		 * append a byte buffer array to this queue. By adding a array,
 		 * the array becomes part of to the buffer, and should not be modified outside the buffer
@@ -399,16 +398,16 @@ final class ReadQueue {
 				currentSize = size;
 									
 			}  else {
+				// 第二次
 				currentSize = null;
 				
+				// 数据复制
 				ByteBuffer[] newBuffers = new ByteBuffer[buffers.length + bufs.length];
 				System.arraycopy(buffers, 0, newBuffers, 0, buffers.length);
 				System.arraycopy(bufs, 0, newBuffers, buffers.length, bufs.length);
 				buffers = newBuffers;
 			}			
 		}
-		
-
 		
 		
 		public synchronized void addFirst(ByteBuffer[] bufs) {

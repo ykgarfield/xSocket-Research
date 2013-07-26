@@ -693,6 +693,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 
 	
 	/**
+	 * 使用指定分隔符读取一个String	</br></br>
+	 * 
 	 * read a string by using a delimiter 
 	 * 
 	 * @param delimiter   the delimiter

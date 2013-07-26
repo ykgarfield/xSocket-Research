@@ -55,6 +55,9 @@ final class IoUnsynchronizedMemoryManager extends AbstractMemoryManager {
 	}
 	
 	
+	/**
+	 * {@link IoSocketDispatcherPool#updateDispatcher()} 处被调用.	</br>
+	 */
 	public static IoUnsynchronizedMemoryManager createPreallocatedMemoryManager(int preallocationSize, int minBufferSze, boolean useDirectMemory) {
 		return new IoUnsynchronizedMemoryManager(preallocationSize, true, minBufferSze, useDirectMemory);
 	}
@@ -99,14 +102,17 @@ final class IoUnsynchronizedMemoryManager extends AbstractMemoryManager {
 	 * {@inheritDoc}
 	 */
 	public ByteBuffer acquireMemoryStandardSizeOrPreallocated(int standardSize) throws IOException {
-		// 默认true
+		// createPreallocatedMemoryManager中为true
 		if (isPreallocationMode()) {
+			// 分配大小
 			preallocate();
 		} else {
 			freeBuffer = newBuffer(standardSize);
 		}
 
 		ByteBuffer buffer = freeBuffer;
+		// 经过大小分配之后置为null
+		// 在后续执行中调用recycleMemory()方法设置freeBuffer
 		freeBuffer = null;
 
 		return buffer;
@@ -122,14 +128,15 @@ final class IoUnsynchronizedMemoryManager extends AbstractMemoryManager {
 		if (isPreallocationMode()) {
 			
 			// sufficient size?
-			// 足够大小?
+			// 足够大小的情况下,第二次及往后都是执行这里
 			if ((freeBuffer != null) && (freeBuffer.remaining() >= getPreallocatedMinBufferSize())) {
 				return;
 			}
 				
 			// no, allocate new 
-			// 分配新的
-			freeBuffer = newBuffer(getPreallocationBufferSize());
+			// 第一次调用,执行这里,分配新的ByteBuffer
+			// 默认不做任何配置, 大小16384
+			freeBuffer = newBuffer(getPreallocationBufferSize());	
 		}
 	}
 	

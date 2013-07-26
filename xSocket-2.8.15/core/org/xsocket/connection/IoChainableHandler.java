@@ -377,7 +377,7 @@ abstract class IoChainableHandler  {
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public Map<String, Class> getOptions() {
 		return getSuccessor().getOptions();
 	}

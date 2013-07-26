@@ -102,7 +102,9 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 
 
 	/**
-	 * 打开选择器,处理OP_READ、OP_WRITE事件
+	 * 打开选择器,处理OP_READ、OP_WRITE事件.	</br>
+	 * 
+	 * {@link IoSocketDispatcherPool#updateDispatcher()} 处调用.	</br>
 	 */
 	public IoSocketDispatcher(AbstractMemoryManager memoryManager, String name)  {
 		this.memoryManager = memoryManager;
@@ -393,7 +395,6 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	}
 
 	
-
 	/**
 	 * 注册读/写事件
 	 */
@@ -697,19 +698,20 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	}
 
 
-
-	
+	/**
+	 * 执行注册事件任务. </br>
+	 */
 	private int performRegisterHandlerTasks() throws IOException {
 		int handledTasks = 0;
 
 		while (true) {
+			// RegisterTask
 			Runnable registerTask = registerQueue.poll();
 
 			if (registerTask == null) {
 				// 队列中不存在任务直接返回,结束循环
 				return handledTasks;
 			} else {
-				// RegisterTask
 				registerTask.run();
 				handledTasks++;
 			}
@@ -728,8 +730,9 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 		    }
 
 			try {
-				// 注册事件
-				socketHandler.getChannel().register(selector, ops, socketHandler);				
+				// 注册事件, IoSocketHandler作为附件
+				socketHandler.getChannel().register(selector, ops, socketHandler);		
+				// 执行onConnect()
 				socketHandler.onRegisteredEvent();
 
 				handledRegistractions++;

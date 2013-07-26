@@ -132,7 +132,7 @@ final class IoProvider  {
 	// preallocation params
 	// 预分配参数
 	public static final String DEFAULT_READ_BUFFER_PREALLOCATION_ON = "true";
-	// 读缓冲区大小
+	// 默认读缓冲区大小
 	public static final int DEFAULT_READ_BUFFER_PREALLOCATION_SIZE = 16384;
 	public static final int DEFAULT_READ_BUFFER_MIN_SIZE = 64;
 	

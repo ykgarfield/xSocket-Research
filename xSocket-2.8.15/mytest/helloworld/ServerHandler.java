@@ -39,10 +39,14 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 		// 读到一个字节就进行打印
 //		char data = (char) nbc.readByte();
 //		String data = nbc.readStringByDelimiter("|");
+		// AbstractNonBlockingStream
+		// 如果没有找到指定的分隔符,会抛出BufferUnderflowException异常
 		String data = nbc.readStringByDelimiter("\r\n");
 		
 		System.out.println("从客户端接收到 : " + data);
-		
+	
+		// 设置为自动刷新
+//		nbc.setAutoflush(true);
 		nbc.write("--|server:receive data from client sucessful| -----");
 		// 触发OP_WRITE事件
 		nbc.flush();

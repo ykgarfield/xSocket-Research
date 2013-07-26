@@ -174,7 +174,7 @@ abstract class AbstractMemoryManager {
 		
 
 	/**
-	 * {@inheritDoc}
+	 * 提取和回收利用内存.分配子缓冲区来存储此次读取的数据
 	 */
 	public final ByteBuffer extractAndRecycleMemory(ByteBuffer buffer, int read) {
 		

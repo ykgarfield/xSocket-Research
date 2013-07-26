@@ -144,6 +144,8 @@ final class IoSocketHandler extends IoChainableHandler {
 	/**
 	 * XXX 注册OP_READ事件	</br>
 	 * 
+	 * {@link NonBlockingConnection#init(IoChainableHandler)} 处被调用.	</br>
+	 * 
 	 * @param callbackHandler IoHandlerCallback
 	 */
     public void init(IIoHandlerCallback callbackHandler) throws IOException, SocketTimeoutException {
@@ -153,7 +155,7 @@ final class IoSocketHandler extends IoChainableHandler {
     
     
     /**
-     * {@inheritDoc}b
+     * {@inheritDoc}
      */
     public boolean reset() {
     	boolean reset = true;
@@ -287,7 +289,8 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 	/**
-	 * 读事件
+	 * 读事件.	</br>
+	 * {@link IoSocketDispatcher#onReadableEvent(IoSocketHandler)} 处被调用.	</br>
 	 */
 	long onReadableEvent() throws IOException {
    
@@ -395,6 +398,9 @@ final class IoSocketHandler extends IoChainableHandler {
 	}
 	
 	
+	/**
+	 * {@link NonBlockingConnection#flush()}
+	 */
 	@Override
 	public void flush() throws IOException {
 		initializeWrite(true);
@@ -532,21 +538,15 @@ final class IoSocketHandler extends IoChainableHandler {
 		return channel;
 	}
 
-
-
-
 	@Override
 	public void suspendRead() throws IOException {
 		dispatcher.suspendRead(this);	
 	}
 
-
-
 	@Override
 	public void resumeRead() throws IOException {
 		dispatcher.resumeRead(this);
 	}
-	
 	
 	@Override
 	public boolean isReadSuspended() {
@@ -567,9 +567,10 @@ final class IoSocketHandler extends IoChainableHandler {
 	        int read = 0;	// 读取的字节数目
 	        lastTimeReceivedMillis = System.currentTimeMillis();
 
-	        // 分配大小
+	        // 分配大小, 默认16384
 	        /** memoryManager 由{@link IoSocketDispatcher#updateDispatcher()} 处设置 */
 			ByteBuffer readBuffer = memoryManager.acquireMemoryStandardSizeOrPreallocated(8192);
+//			System.out.println("readBuffer：" + readBuffer);
 			int pos = readBuffer.position();
 			int limit = readBuffer.limit();
 		
@@ -618,7 +619,10 @@ final class IoSocketHandler extends IoChainableHandler {
 
                 // bytes available (read < -1 is not handled)
 				default:					
+					// 提取和回收利用内存
+					// 这里经过处理后dataBuffer就是此次过程中接收到的数据
 					ByteBuffer dataBuffer = memoryManager.extractAndRecycleMemory(readBuffer, read);
+//					System.out.println("dataBuffer：" + dataBuffer);
 
 					received = new ByteBuffer[1];
 					received[0] = dataBuffer;

@@ -85,6 +85,9 @@ class HandlerAdapter  {
 	}
 	   
     
+	/**
+	 * {@link NonBlockingConnection#onConnect()} 处被调用.	</br>
+	 */
     public boolean onConnect(final INonBlockingConnection connection, final SerializedTaskQueue taskQueue, final Executor workerpool, boolean isUnsynchronized) throws IOException, BufferUnderflowException, MaxReadSizeExceededException {
     	// 是否实现了IConnectHandler接口
         if (handlerInfo.isConnectHandler()) {
@@ -251,6 +254,7 @@ class HandlerAdapter  {
                 }
                 
                 // XXX 执行业务逻辑的onData()方法
+                // helloworld.ServerHandler
                 handler.onData(connection);
 
                 if (version == connection.getReadBufferVersion()) {
@@ -266,7 +270,12 @@ class HandlerAdapter  {
 
         } catch (BufferUnderflowException bue) {
             // ignore
-                        
+        	// 忽略异常
+        	// 比如在服务器端处理的时候用INonBlockingConnection#readStringByDelimiter(String)读取数据
+        	// 但是没有匹配上指定的分隔符,这样就会抛出BufferUnderflowException,那么就会进入到这里的catch块.
+        	// 不过以前读取的数据是会保留的
+            // XXX 这里自己加上了打印语句
+        	System.err.println("Not Found special delimiter!");
         } catch (IOException ioe) {
             if (!ignoreException) {
                 if (LOG.isLoggable(Level.FINE)) {
