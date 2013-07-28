@@ -261,6 +261,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 				handledTasks += performDeregisterHandlerTasks();
 				//System.out.println("handledTasks：                              " + handledTasks);
 				
+				// FIXME
 				checkForLooping(eventCount + handledTasks, lastTimeWokeUp);
 			} catch (Throwable e) {
                 // eat and log exception
@@ -378,12 +379,15 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	}
 
 
+	// 默认返回true
 	boolean preRegister() {
 
         // inc rough num of registered handles
         roughNumOfRegisteredHandles++;
 
         // check if max size reached
+        // 处理的最大值
+        // MAX_HANDLES默认为null
 	    if ((MAX_HANDLES != null) &&
 	        (roughNumOfRegisteredHandles >= MAX_HANDLES) &&  // rough check 
 	        (getNumRegisteredHandles() >= MAX_HANDLES)) {    // accurate check

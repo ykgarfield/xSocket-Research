@@ -70,7 +70,7 @@ public class Server implements IServer {
     protected static final int MIN_SIZE_WORKER_POOL = Integer.parseInt(System.getProperty("org.xsocket.connection.server.workerpoolMinSize", "2"));
     /** 任务队列大小,默认100 */
     protected static final int TASK_QUEUE_SIZE = Integer.parseInt(System.getProperty("org.xsocket.connection.server.taskqueuesize", Integer.toString(SIZE_WORKER_POOL)));
-    /** 最大连接等待时间,默认500毫秒 */
+    /** 超过最大连接的等待时间,默认500毫秒 */
     private static final int WAITTIME_MAXCONNECTION_EXCEEDED = Integer.parseInt(System.getProperty("org.xsocket.connection.server.waittimeMaxConnectionExceeded", Integer.toString(500)));
 
     // 刷新模式
@@ -111,7 +111,7 @@ public class Server implements IServer {
 
 	
 	// app handler
-    // 在构造函数中被处理
+    // 在构造函数中调用setHandler()方法被处理
 	private HandlerAdapter handlerAdapter = HandlerAdapter.newInstance(null);
 	
 	
@@ -119,11 +119,12 @@ public class Server implements IServer {
 	private Integer maxReadBufferThreshold = null;
 	
 	// timeouts
-	// 空闲超时时间
+	// 空闲超时时间, 默认为long类型的最大值
 	private long idleTimeoutMillis = IConnection.MAX_TIMEOUT_MILLIS;
 	// 这里的连接超时指的不是等待客户端连接的超时时间.
 	// 也就是指的不是设置的ServerSocket.setSoTimeOut()的超时时间.
 	// xSocket的连接超时时间为0,也就是永远不会超时.一直等待连接.
+	// FIXME：此参数名称有点歧义
 	private long connectionTimeoutMillis = IConnection.MAX_TIMEOUT_MILLIS;
 
 	// server listeners
@@ -1231,7 +1232,7 @@ public class Server implements IServer {
 	        } else {
 	        	// 没有超过最大连接.创建一个新的connection
 	            // create a new connection 
-	        	// handlerAdapter在构造函数中经过处理
+	        	// handlerAdapter在构造函数中调用setHandler()方法经过处理
 	            NonBlockingConnection connection = new NonBlockingConnection(connectionManager, handlerAdapter.getConnectionInstance());
 	            init(connection, ioHandler);
 	        }

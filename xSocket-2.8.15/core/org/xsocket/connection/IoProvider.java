@@ -246,7 +246,7 @@ final class IoProvider  {
 	    	clientReadBufferMinsize = readIntProperty(IoProvider.CLIENT_READBUFFER_PREALLOCATION_MIN_SIZE_KEY, DEFAULT_READ_BUFFER_MIN_SIZE);
     	}
 
-    	
+    	// 默认为true
     	serverReadBufferPreallocationOn = readBooleanProperty(IoProvider.SERVER_READBUFFER_PREALLOCATION_ON_KEY, DEFAULT_READ_BUFFER_PREALLOCATION_ON);
     	if (serverReadBufferPreallocationOn) {   		
     		serverReadBufferPreallocationsize = readIntProperty(IoProvider.SERVER_READBUFFER_PREALLOCATION_SIZE_KEY, DEFAULT_READ_BUFFER_PREALLOCATION_SIZE);
@@ -283,6 +283,7 @@ final class IoProvider  {
 		 	
 			
 			// client params
+			// 如果是服务器端的话,client的参数没有必要打印
 			sb.append("client: directMemory=" + clientReadBufferUseDirect);
 			sb.append(" preallocation=" + clientReadBufferPreallocationOn);
 			if (clientReadBufferPreallocationOn) {
@@ -301,6 +302,8 @@ final class IoProvider  {
 			sb.append(")");
 			LOG.fine(sb.toString());
 		}
+		
+		System.out.println("countDispatcher：" + countDispatcher);
      }
 
 
@@ -312,6 +315,9 @@ final class IoProvider  {
 	
 	/** 先执行静态方法块 */
 	IoProvider() {
+		// 同时创建服务器端和客户端的MemoryManager
+		// 在createIoHandler()方法中会使用到
+		// FIXME：这两个都是SSL的MemoryManager,如果不是SSL,那么在这里实例化这两个对象是没有必要的.
 		if (serverReadBufferPreallocationOn) {
 			sslMemoryManagerServer = IoSynchronizedMemoryManager.createPreallocatedMemoryManager(serverReadBufferPreallocationsize, serverReadBufferMinsize, serverReadBufferUseDirect);
 		} else {
@@ -390,6 +396,9 @@ final class IoProvider  {
 	    return suppressReuseBufferWarning;
 	}
 	
+	/**
+	 * 服务器端创建IoSocketDispatcher的数目.
+	 */
 	static int getServerDispatcherInitialSize() {
 		if (countServerDispatcher == null) {
 			return getDispatcherInitialSize();
@@ -398,7 +407,9 @@ final class IoProvider  {
 		}
 	}
 
-
+	/**
+	 * 客户端端创建IoSocketDispatcher的数目.
+	 */
 	static int getClientDispatcherInitialSize() {
 		if (countClientDispatcher == null) {
 			return  getDispatcherInitialSize();
@@ -408,11 +419,13 @@ final class IoProvider  {
 	}
 
 	
+	/**
+	 * 创建IoSocketDispatcher的数目.
+	 */
 	private static int getDispatcherInitialSize() {
 		
 	    if (countDispatcher == null) {
 		    return 2;
-		    
 		} else {
 			return countDispatcher;
 		}
@@ -490,7 +503,7 @@ final class IoProvider  {
 	 * {@inheritDoc}
 	 */
 	public IoAcceptor createAcceptor(IIoAcceptorCallback callback, InetSocketAddress address, int backlog, Map<String, Object> options, SSLContext sslContext, boolean sslOn) throws IOException {
-		// FIXME : 这个属性应该是搞错了,这样会导致一些问题
+		// FIXME : 这个属性应该是搞错了,这样会导致属性设置了却无法起作用的问题
 //		Boolean isReuseAddress = (Boolean) options.get("SO_REUSEADDR");
 		Boolean isReuseAddress = (Boolean) options.get(IConnection.SO_REUSEADDR);
 	    if (isReuseAddress == null) {

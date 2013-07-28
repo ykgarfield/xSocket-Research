@@ -117,7 +117,7 @@ final class IoAcceptor  {
         serverChannel = ServerSocketChannel.open();
         assert (serverChannel != null);
         
-        // XXX OP_ACCEPT为阻塞模式
+        // XXX 为阻塞模式
         serverChannel.configureBlocking(true);
         // 等待客户端连接永远不会超时
         serverChannel.socket().setSoTimeout(0);  // accept method never times out

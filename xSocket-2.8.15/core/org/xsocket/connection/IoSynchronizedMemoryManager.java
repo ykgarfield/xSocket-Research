@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 import org.xsocket.DataConverter;
 
 /**
+ * 用于多线程中.		<br></br>
+ * 
  * a Memory Manager implementation  
  *  
  * @author grro@xsocket.org

@@ -27,9 +27,9 @@ import java.util.logging.Logger;
 
 import org.xsocket.DataConverter;
 
-
-
 /**
+ * 内存管理的基本实现.	</br></br>
+ * 
  * implementation base for a Memory Manager implementation  
  *  
  * @author grro@xsocket.org

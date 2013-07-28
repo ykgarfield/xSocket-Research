@@ -29,8 +29,9 @@ import java.util.logging.Logger;
 import org.xsocket.DataConverter;
 
 /**
- * Single thread memory manager
+ * 用于单线程中.		<br><br>
  * 
+ * Single thread memory manager
  * 
  * @author grro@xsocket.org
  */

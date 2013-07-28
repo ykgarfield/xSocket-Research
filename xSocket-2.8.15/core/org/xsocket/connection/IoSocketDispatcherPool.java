@@ -63,8 +63,9 @@ final class IoSocketDispatcherPool implements Closeable {
 
 	// dispatcher management
 	private final LinkedList<IoSocketDispatcher> dispatchers = new LinkedList<IoSocketDispatcher>();
-	// 在setDispatcherSize(int)方法中设置
+	// 在setDispatcherSize(int)方法中设置, 创建的IoSocketDispatcher的数目
 	private int size;
+	// 从dispatchers取出的索引
 	private int pointer;
 	
     // statistics
@@ -104,18 +105,23 @@ final class IoSocketDispatcherPool implements Closeable {
 	private IoSocketDispatcher nextDispatcher(int currentTrial) throws IOException {
 		IoSocketDispatcher dispatcher = null;
 		
+		// isOpen默认为true
 		if (!isOpen) {
 		    throw new IOException("dispatcher is already closed");
 		}
 		
 		try {
 			// round-robin approach
+			// 循环调用
+			// 
 			pointer++;
 			if (pointer >= size) { // unsynchronized access of size is OK here (findbugs will criticize this)
 				pointer = 0;
 			}
 	
+			System.out.println("pointer：" + pointer);
 			dispatcher = dispatchers.get(pointer);
+			// 默认返回true
 			boolean peregistered = dispatcher.preRegister();
 			
 			if (peregistered) {
@@ -183,6 +189,8 @@ final class IoSocketDispatcherPool implements Closeable {
 							IoUnsynchronizedMemoryManager memoryManager = null;
 							// 默认为true
 							if (preallocation) {
+								// preallocationSize默认为：16384
+								// bufferMinsize默认为：64
 								// useDirect默认false
 								memoryManager = IoUnsynchronizedMemoryManager.createPreallocatedMemoryManager(preallocationSize, bufferMinsize, useDirect);
 							} else {
@@ -306,7 +314,8 @@ final class IoSocketDispatcherPool implements Closeable {
 
     
 	/**
-	 * 设置大小
+	 * 设置大小.</br>
+	 * FIXME :这里为什么需要同步? 
 	 */
 	synchronized void setDispatcherSize(int size) {
     	this.size = size;

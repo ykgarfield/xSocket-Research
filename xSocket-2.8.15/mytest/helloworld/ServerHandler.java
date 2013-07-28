@@ -41,6 +41,7 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 //		String data = nbc.readStringByDelimiter("|");
 		// AbstractNonBlockingStream
 		// 如果没有找到指定的分隔符,会抛出BufferUnderflowException异常
+		// 不过xSocket会吞掉这个异常
 		String data = nbc.readStringByDelimiter("\r\n");
 		
 		System.out.println("从客户端接收到 : " + data);
