@@ -295,13 +295,13 @@ final class ReadQueue {
 	private static final class Queue implements ISource {
 		
 		private static final int THRESHOLD_COMPACT_BUFFER_COUNT_TOTAL = 20;
-		private static final int THRESHOLD_COMPACT_BUFFER_COUNT_EMPTY = 10;
+		private static final int THRESHOLD_COMPACT_BUFFER_COUNT_EMPTY = 10;	// 空的ByteBuffer合并的阀值
 		
 		
 		// queue
-		private ByteBuffer[] buffers = null;
+		private ByteBuffer[] buffers = null;	// 所有读取的数据
 		
-		private Integer currentSize = null; 
+		private Integer currentSize = null; 	// 当前字节的大小
 		private int version = 0;
 		private boolean isAppended = false;
 
@@ -379,6 +379,8 @@ final class ReadQueue {
 
 
 		/**
+		 * 将ByteBuffer数组添加到队列中.	</br></br>
+		 * 
 		 * append a byte buffer array to this queue. By adding a array,
 		 * the array becomes part of to the buffer, and should not be modified outside the buffer
 		 * to avoid side effects
@@ -402,8 +404,13 @@ final class ReadQueue {
 				currentSize = null;
 				
 				// 数据复制
+				// 上一次和本次
 				ByteBuffer[] newBuffers = new ByteBuffer[buffers.length + bufs.length];
+				// 将buffers中的数据复制到newBuffers中.
+				// buffers存放的是上一次为止的数据.
+				// 现在newBuffers中的最后bufs.length个元素为null
 				System.arraycopy(buffers, 0, newBuffers, 0, buffers.length);
+				// 填充newBuffers中的最后bufs.length个元素为本次读取的bufs
 				System.arraycopy(bufs, 0, newBuffers, buffers.length, bufs.length);
 				buffers = newBuffers;
 			}			
@@ -436,6 +443,9 @@ final class ReadQueue {
 		}
 
 		
+		/**
+		 * 是否包含空的ByteBuffer
+		 */
 		private static boolean containsEmptyBuffer(ByteBuffer[] bufs) {
 			boolean containsEmtpyBuffer = false;
 			
@@ -501,6 +511,7 @@ final class ReadQueue {
 				throw new BufferUnderflowException();
 			}
 		
+			// 字节数是否足够
 			// enough bytes available ?
 			if (!isSizeEqualsOrLargerThan(length)) {
 				throw new BufferUnderflowException();
@@ -513,38 +524,44 @@ final class ReadQueue {
 
 			
 			ByteBuffer result = null;
-			int countEmptyBuffer = 0;
+			int countEmptyBuffer = 0;	// 空的ByteBuffer的
 			
-			bufLoop : for (int i = 0; i < buffers.length; i++) {
+			bufLoop : 
+			for (int i = 0; i < buffers.length; i++) {
 				if (buffers[i] == null) {
 					countEmptyBuffer++;
 					continue;
 				}
 					
-				
+				// 第一个ByteBuffer的长度 == 请求的长度
 				// length first buffer == required length
 				if (buffers[i].remaining() == length) {
 					result = buffers[i];
 					buffers[i] = null;
-					break bufLoop;
+					break bufLoop;	// 结束循环
 			
 					
+				// 第一个ByteBuffer的长度 > 请求的长度	
 				// length first buffer > required length
 				} else if(buffers[i].remaining() > length) {
+					// 当前的limit和pos
 					int savedLimit = buffers[i].limit();
 					int savedPos = buffers[i].position();
 			
+					// 更新limit
 					buffers[i].limit(buffers[i].position() + length);
 			
+					// 子缓冲区, 存放要读取的数据
 					result = buffers[i].slice();
 			
+					// 更新ByteBuffer, 存放未读取的数据 
 					buffers[i].position(savedPos + length);
 					buffers[i].limit(savedLimit);
-					buffers[i] = buffers[i].slice();
+					buffers[i] = buffers[i].slice(); 
 			
-					break bufLoop;
+					break bufLoop; // 结束循环
 			
-			
+				// 第一个ByteBuffer的长度 < 请求的长度	
 				// length first buffer < required length
 				} else {
 					result = ByteBuffer.allocate(length);
@@ -563,12 +580,16 @@ final class ReadQueue {
 								// all data written
 								if (written == length) {
 									if (buffers[j].position() < buffers[j].limit()) {
+										// 更新ByteBuffer
 										buffers[j] = buffers[j].slice();
 									} else {
+										// 一个ByteBuffer全部读完,置为null
 										buffers[j] = null;		
 									}
+									// 准备数据
 									result.clear();
 										
+									// 结束循环
 									break bufLoop;
 								}
 							}
@@ -576,7 +597,7 @@ final class ReadQueue {
 			
 						buffers[j] = null;
 					}
-				}
+				} // end of else
 			}
 			
 			

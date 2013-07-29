@@ -140,7 +140,9 @@ class HandlerAdapter  {
     }
     
     
-    
+    /**
+     * 执行连接操作
+     */
     private static boolean performOnConnect(INonBlockingConnection connection, SerializedTaskQueue taskQueue, IConnectHandler handler) {
         
         try {
@@ -169,9 +171,9 @@ class HandlerAdapter  {
     }
     
     
-    
-    
-
+    /**
+     * 执行onData()操作
+     */
     public boolean onData(INonBlockingConnection connection, SerializedTaskQueue taskQueue, Executor workerpool, boolean ignoreException, boolean isUnsynchronized) {
         if (handlerInfo.isDataHandler()) {
             
@@ -181,6 +183,7 @@ class HandlerAdapter  {
             } else {
                 
             	 if (getHandlerInfo().isDataHandlerMultithreaded()) {
+            		 // 执行onData()逻辑
                      taskQueue.performMultiThreaded(new PerformOnDataTask(connection, taskQueue, ignoreException, (IDataHandler) handler), workerpool);
                      
                  } else {
@@ -231,7 +234,9 @@ class HandlerAdapter  {
     }
     
 
-	
+	/**
+	 * @param ignoreException	是否忽略超过了最大的读字节数目的异常
+	 */
 	private static void performOnData(INonBlockingConnection connection, SerializedTaskQueue taskQueue, boolean ignoreException, IDataHandler handler) {
 
         try {
@@ -254,9 +259,10 @@ class HandlerAdapter  {
                 }
                 
                 // XXX 执行业务逻辑的onData()方法
-                // helloworld.ServerHandler
+                // 比如：helloworld.ServerHandler
                 handler.onData(connection);
 
+                // FIXME：
                 if (version == connection.getReadBufferVersion()) {
                     return;
                 }

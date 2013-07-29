@@ -840,21 +840,29 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 
 
 	/**
+	 * 通过length读取一个ByteBuffer.		</br>
+	 * 如果底层的数据分散于几个ByteBuffer,这些ByteBuffers将被合并.	</br></br>
+	 * 
 	 * read a byte buffer by length. If the underlying data is fragmented over several ByteBuffer,
 	 * the ByteBuffers will be merged
 	 * 
 	 * @param length   the length 
+	 * 		    读取的的数据类型的字节数, byte-1, short-2, int-4, long-8
+	 * 
 	 * @return the byte buffer
+	 * 
      * @throws IOException If some other I/O error occurs
  	 * @throws BufferUnderflowException if not enough data is available 
  	 * @throws ClosedChannelException If the stream is closed   
 	 */
 	protected ByteBuffer readSingleByteBuffer(int length) throws IOException, ClosedChannelException, BufferUnderflowException, ClosedChannelException {
+		// 保证流是打开的
 		ensureStreamIsOpen();
 		
 		int version = getReadBufferVersion();
 		try {
 			ByteBuffer buffer = readQueue.readSingleByteBuffer(length);
+			// 合并ByteBuffers
 			return DataConverter.toByteBuffer(new ByteBuffer[] { buffer });
 
 		} catch (BufferUnderflowException bue) {

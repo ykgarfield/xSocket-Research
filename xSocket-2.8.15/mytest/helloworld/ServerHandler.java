@@ -14,16 +14,24 @@ import org.xsocket.connection.IIdleTimeoutHandler;
 import org.xsocket.connection.INonBlockingConnection;
 
 /**
- * 服务端定义数据的处理类
+ * 服务端定义数据的处理类.		</br>
+ * 
+ * 写事件完全是由服务器端控制.
+ * 可调用INonBlockingConnection.write();INonBlockingConnection.flush();
+ * 来注册OP_WRITE事件执行向客户端写的操作
  */
 public class ServerHandler implements IDataHandler, IConnectHandler,
 		IIdleTimeoutHandler, IConnectionTimeoutHandler, IDisconnectHandler {
 
+	/**
+	 * 连接逻辑. 
+	 * 这里返回true/false没有区别.
+	 */
 	@Override
 	public boolean onConnect(INonBlockingConnection nbc) throws IOException,
 			BufferUnderflowException, MaxReadSizeExceededException {
 		InetAddress address = nbc.getRemoteAddress();
-		System.out.println("a new connection + " + address);
+		System.out.println("a new connection : " + address);
 		return true;
 	}
 
@@ -36,13 +44,20 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 	public boolean onData(INonBlockingConnection nbc) throws IOException,
 			BufferUnderflowException, ClosedChannelException,
 			MaxReadSizeExceededException {
-		// 读到一个字节就进行打印
-//		char data = (char) nbc.readByte();
-//		String data = nbc.readStringByDelimiter("|");
+		// readByte() : 读到一个字节就进行打印
+		char data = (char) nbc.readByte();
+		
+		// readInt()：读4个字节
+		// 如果客户端发送的字节为5个,那么会出现BufferUnderflowException异常,不过会被xSocket吞掉
+		// 其实这个时候readInt()方法相当于使用了1次读取4个字节作为分隔符.
+		// xSocket会对接收到的数据做4个字节的拆分,然后读取.
+//		int data = nbc.readInt();
+		
+		// readStringByDelimiter：指定分隔符
 		// AbstractNonBlockingStream
 		// 如果没有找到指定的分隔符,会抛出BufferUnderflowException异常
 		// 不过xSocket会吞掉这个异常
-		String data = nbc.readStringByDelimiter("\r\n");
+//		String data = nbc.readStringByDelimiter("\r\n");
 		
 		System.out.println("从客户端接收到 : " + data);
 	

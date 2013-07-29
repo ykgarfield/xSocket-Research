@@ -11,7 +11,7 @@ import system.prop.SystemPropertyLoad;
 public class XSocketServer {
 	private static final int PORT = 1234;
 	public static void main(String[] args) throws Exception {
-		SystemPropertyLoad.loadSystemProperty();
+		//SystemPropertyLoad.loadSystemProperty();
 		JdkLogInit.init();
 		
 		// 创建一个服务端的对象 

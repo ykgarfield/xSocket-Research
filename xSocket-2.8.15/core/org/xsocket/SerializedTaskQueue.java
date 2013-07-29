@@ -38,10 +38,12 @@ public final class SerializedTaskQueue  {
 	
 	private static final Logger LOG = Logger.getLogger(SerializedTaskQueue.class.getName());
 
-	// 任务队列
+	// 任务队列,需要进行同步
 	private final LinkedList<Runnable> multithreadedTaskQueue = new LinkedList<Runnable>();
 	
 	private final ReentrantLock processLock = new ReentrantLock(false);
+	
+	// 多线程任务处理
 	private final MultithreadedTaskProcessor multithreadedTaskProcessor = new MultithreadedTaskProcessor();
 
 	
@@ -93,7 +95,11 @@ public final class SerializedTaskQueue  {
 	
 	
 	/**
+	 * 会被多个IoSocketDispatcher调用执行.	</br>
 	 * 
+	 * 
+	 * 由内部的任务队列多线程同步处理一个任务.任务将由一个指定的线程执行.
+	 * 给定的workder pool将用来执行这个任务(其它的任务也是这样).	</br></br>
 	 * 
 	 * process a task multi threaded synchronized by the internal task queue. The task will
 	 * be processed by a dedicated thread. The given worker pool <i>can</i> be used to perform this 
@@ -110,6 +116,7 @@ public final class SerializedTaskQueue  {
 			
 			// (Multithreaded) worker is not running
 			if (multithreadedTaskQueue.isEmpty()) {
+				//System.out.println("not running");
 				multithreadedTaskQueue.addLast(task);
 				
 				try {
@@ -125,6 +132,7 @@ public final class SerializedTaskQueue  {
 				}
 				
 			} else {
+				//System.out.println("add task");
 				multithreadedTaskQueue.addLast(task);
 			}
 		}
@@ -149,6 +157,8 @@ public final class SerializedTaskQueue  {
 				Runnable task = null;
 				
 				synchronized (multithreadedTaskQueue) {
+					//System.out.println("multithreadedTaskQueue size : " + multithreadedTaskQueue.size());
+					
 					if (!multithreadedTaskQueue.isEmpty()) {
 						// 取出任务,不删除
 						task = multithreadedTaskQueue.get(0);

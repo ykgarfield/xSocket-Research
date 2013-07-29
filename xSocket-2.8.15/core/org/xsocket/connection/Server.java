@@ -622,7 +622,6 @@ public class Server implements IServer {
 	 * 
 	 * 会在start()方法中会创建Server线程,此方法将被调用	</br></br>
 	 * 
-	 * {@inheritDoc}
 	 */
 	@Override
 	public void run() {

@@ -32,11 +32,9 @@ import java.util.logging.Logger;
 
 import org.xsocket.DataConverter;
 
-
-
-
-
 /**
+ * 连接管理.	</br></br>
+ * 
  * Connection manager 
  *
  * @author grro@xsocket.org
@@ -241,6 +239,7 @@ final class ConnectionManager {
         @Override
         public void run() {
             try {
+            	// 检查
                 check();
             } catch (Exception e) {
                 
@@ -251,9 +250,6 @@ final class ConnectionManager {
             }
         }
 	}
-	
-
-	
 	
 	@SuppressWarnings("unchecked")
 	void check() {

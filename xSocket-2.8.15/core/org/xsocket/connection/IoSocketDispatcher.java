@@ -124,7 +124,6 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 			LOG.severe(text);
 			throw new RuntimeException(text, ioe);
 		}
-		
 
         if (LOG.isLoggable(Level.FINE)) {
             LOG.fine("dispatcher " + this.hashCode() + " has been closed");
@@ -407,7 +406,9 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 
 		socketHandler.setMemoryManager(memoryManager);
 
-		if (isDispatcherInstanceThread()) {	// false
+		//System.out.println("isDispatcherInstanceThread：" + isDispatcherInstanceThread());
+		// IoSocketDispatcher线程是否已经运行
+		if (isDispatcherInstanceThread()) {	
 			registerHandlerNow(socketHandler, ops);
 		} else {
 		    if (LOG.isLoggable(Level.FINE)) {

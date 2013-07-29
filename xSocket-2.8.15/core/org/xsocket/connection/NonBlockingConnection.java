@@ -959,10 +959,12 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	
 	
 	/**
+	 * 设置最大的读缓冲阀值.	</br>
+	 * 此方法可以在服务器端的处理器中调用.  </br></br>
+	 * 
 	 * {@inheritDoc}
 	 */
 	public void setMaxReadBufferThreshold(int size) {
-		
 		if (size == Integer.MAX_VALUE) {
 			maxReadBufferSize = null;
 		} else {
@@ -1236,18 +1238,20 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	}
 	
 	
+	/**
+	 * 将在接收到的数据加入到ReadQueue之后被调用.
+	 * 将检查最大的读缓冲是否已经能达到.如果达到,接收将暂停.	</br></br>
+	 * 
+     * this method will be called within the I/O thread after the recevied data 
+     * is append to the read buffer. Here it will be check if the max read buffer 
+     * size is reached. If this is true, receiving will be suspended
+     * 
+     * To avoid race conditions the code is protected by the suspend guard
+     */
     @Override
     protected void onPostAppend() {
+    	System.out.println("maxReadBufferSize：" + maxReadBufferSize);
 
-        /**
-         * this method will be called within the I/O thread after the recevied data 
-         * is append to the read buffer. Here it will be check if the max read buffer 
-         * size is reached. If this is true, receiving will be suspended
-         * 
-         * To avoid race conditions the code is protected by the suspend guard
-         */
-        
-        
         // auto suspend support?
         if (maxReadBufferSize != null) {
             
@@ -1311,14 +1315,14 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
     }
     
 	
-	
-	private void onPostData() {
 
-	    /**
-         * This method will be called (by IoSocketHandler) after the onData method 
-         * is called
-         */
-	    
+    /**
+     * 这个方法在调用onData()方法后调用.	</br></br>
+     * 
+     * This method will be called (by IoSocketHandler) after the onData method 
+     * is called
+     */
+	private void onPostData() {
 	    handlerAdapterRef.get().onData(NonBlockingConnection.this, taskQueue, workerpool, false, false);
 	}
 	

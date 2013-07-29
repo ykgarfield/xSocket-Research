@@ -113,13 +113,15 @@ final class IoSocketDispatcherPool implements Closeable {
 		try {
 			// round-robin approach
 			// 循环调用
-			// 
+			// 比如,如果IoSocketDispatcherPool中有3个IoSocketDispatcher
+			// 那么这里取出IoSocketDispatcher的顺序为：
+			// 1 -> 2 -> 0 -> 1 -> 2 -> 0 -> 1 -> 2 -> 0 ...
 			pointer++;
 			if (pointer >= size) { // unsynchronized access of size is OK here (findbugs will criticize this)
+				// 继续从0开始取
 				pointer = 0;
 			}
 	
-			System.out.println("pointer：" + pointer);
 			dispatcher = dispatchers.get(pointer);
 			// 默认返回true
 			boolean peregistered = dispatcher.preRegister();

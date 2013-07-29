@@ -28,10 +28,9 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-
-
-
 /**
+ * 读取数据的操作.	</br></br>
+ * 
  * A data source is an I/O resource capable of providing data.
  * 
  * @author grro@xsocket.org
@@ -131,7 +130,7 @@ public interface IDataSource {
 	 * @param delimiter   the delimiter (by using the default encoding)
 	 * @param maxLength   the max length of bytes that should be read. If the limit is exceeded a MaxReadSizeExceededException will been thrown	 
 	 * @return the ByteBuffer
-	 * @throws MaxReadSizeExceededException If the max read length has been exceeded and the delimiter hasn�t been found     
+	 * @throws MaxReadSizeExceededException If the max read length has been exceeded and the delimiter hasn�t been found     
 	 * @throws IOException If some other I/O error occurs
 	 */
 	ByteBuffer[] readByteBufferByDelimiter(String delimiter, int maxLength) throws IOException, MaxReadSizeExceededException;
@@ -205,7 +204,7 @@ public interface IDataSource {
 	 * @param delimiter   the delimiter (by using the default encoding)
 	 * @param maxLength   the max length of bytes that should be read. If the limit is exceeded a MaxReadSizeExceededException will been thrown
 	 * @return the read bytes
-	 * @throws MaxReadSizeExceededException If the max read length has been exceeded and the delimiter hasn�t been found 	 
+	 * @throws MaxReadSizeExceededException If the max read length has been exceeded and the delimiter hasn�t been found 	 
 	 * @throws IOException If some other I/O error occurs
 	 */
 	byte[] readBytesByDelimiter(String delimiter, int maxLength) throws IOException, MaxReadSizeExceededException;
@@ -219,7 +218,7 @@ public interface IDataSource {
 	 * @param delimiter   the delimiter (by using the default encoding)
 	 * @param maxLength   the max length of bytes that should be read. If the limit is exceeded a MaxReadSizeExceededException will been thrown
 	 * @return the string
-	 * @throws MaxReadSizeExceededException If the max read length has been exceeded and the delimiter hasn�t been found 	 
+	 * @throws MaxReadSizeExceededException If the max read length has been exceeded and the delimiter hasn�t been found 	 
 	 * @throws IOException If some other I/O error occurs
  	 * @throws UnsupportedEncodingException If the given encoding is not supported
 	 */

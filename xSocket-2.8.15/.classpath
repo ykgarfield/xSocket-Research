@@ -40,5 +40,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/jmx/jmxri.jar"/>
+	<classpathentry kind="lib" path="lib/jmx/jmxtools.jar"/>
 	<classpathentry kind="output" path="target/test-classes"/>
 </classpath>

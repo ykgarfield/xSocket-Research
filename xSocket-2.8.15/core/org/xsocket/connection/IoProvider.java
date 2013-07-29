@@ -557,6 +557,7 @@ final class IoProvider  {
     	}
 
     	// SocketChannel, 非阻塞
+    	// 这段操作放到 if(sslContext != null)的else块里更好点.
 		IoChainableHandler ioHandler = new IoSocketHandler(channel, dispatcher, connectionId);
 
 		// ssl connection?

@@ -6,6 +6,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 public class SystemPropertyLoad {
+	@SuppressWarnings("unchecked")
 	public static void loadSystemProperty() {
 		Properties props = new Properties();
 		
@@ -16,7 +17,7 @@ public class SystemPropertyLoad {
 			e.printStackTrace();
 		}
 		
-		if (props != null) {
+		if (props != null && props.size() > 0) {
 			Enumeration<String> keys = (Enumeration<String>) props.propertyNames();
 			while (keys.hasMoreElements()) {
 				String key = keys.nextElement();
@@ -24,14 +25,9 @@ public class SystemPropertyLoad {
 				System.setProperty(key, value);
 			}
 			
-			// 直接使用下面的代码有问题：
-//			System.setProperties(props);
+			// 直接使用下面的代码有问题,慎用
+			//System.setProperties(props);
 		}
-		
-//		ZoneInfo: null\lib\zi\ZoneInfoMappings (系统找不到指定的路径。)
 	}
 
-	public static void main(String[] args) {
-		loadSystemProperty();
-	}
 }
