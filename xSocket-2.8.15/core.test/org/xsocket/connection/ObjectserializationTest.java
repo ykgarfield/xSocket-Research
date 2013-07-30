@@ -37,9 +37,9 @@ import org.xsocket.MaxReadSizeExceededException;
 import org.xsocket.connection.INonBlockingConnection;
 import org.xsocket.connection.IConnection.FlushMode;
 
-
-
 /**
+ *
+ * 发送和接收序列化对象	</br>
  *
  * @author grro@xsocket.org
  */

@@ -148,6 +148,8 @@ public final class DataConverter {
 	
 	
 	/**
+	 * 将给定的字符串以指定的编码转为ByteBuffer.		</br></br>
+	 * 
 	 * converts the given String into a ByteBuffer
 	 * 
 	 * @param s the String to convert

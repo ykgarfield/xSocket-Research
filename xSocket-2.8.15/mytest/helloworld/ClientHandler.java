@@ -42,9 +42,7 @@ public class ClientHandler implements IDataHandler, IConnectHandler,
 	public boolean onData(INonBlockingConnection nbc) throws IOException,
 			BufferUnderflowException, ClosedChannelException,
 			MaxReadSizeExceededException {
-		String data = nbc.readStringByDelimiter("|");
-		nbc.write("--|Client:receive data from server sucessful| -----");
-		nbc.flush();
+		String data = nbc.readStringByDelimiter("\r\n");
 		System.out.println("receive data : " + data);
 		return true;
 	}

@@ -40,9 +40,6 @@ import java.util.logging.Logger;
 
 import org.xsocket.DataConverter;
 
-
-
-
 /**
  * The connector is responsible to connect a peer<br><br>
  *
@@ -70,9 +67,8 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
     private final String name;
     
     // queues
+    // RegisterTask
     private final ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<Runnable>();
-
-    
 
     public IoConnector(String name) {
         this.name = CONNECTOR_PREFIX + "#" + name;
@@ -94,8 +90,9 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
     
 
     /**
-     * {@inheritDoc}
+     * {@link NonBlockingConnection#getDefaultConnector()} 处被调用 </br>
      */
+    @Override
     public void run() {
 
         // set thread name and attach dispatcher id to thread
@@ -104,17 +101,20 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
         if (LOG.isLoggable(Level.FINE)) {
             LOG.fine("selector " + name + " listening ...");
         }
-
         
         int handledTasks = 0;
 
+        // 默认为true
         while(isOpen.get()) {
             try {
                 handledTasks = performTaskQueue();
                 
+                // 会被connectAsync()方法唤醒
                 int eventCount = selector.select(1000);
                 
                 if (eventCount > 0) {
+                	// 处理连接
+                	/** {@link IoConnector.RegisterTask#run()} */
                     handleConnect();
                     
                 } else {
@@ -126,8 +126,6 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
                 LOG.warning("[" + Thread.currentThread().getName() + "] exception occured while processing. Reason " + DataConverter.toString(e));
             }
         }
-
-
 
         try {
             selector.close();
@@ -182,9 +180,7 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
         }
     }
 
-
-
-
+    // 处理连接事件
     private void handleConnect() {
         Set<SelectionKey> selectedEventKeys = selector.selectedKeys();
 
@@ -201,7 +197,9 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
                 try {
                     boolean isConnected = ((SocketChannel) eventKey.channel()).finishConnect();
                     if (isConnected) {
+                    	// 取消事件
                     	eventKey.cancel();
+                    	// 连接回调
                     	registerTask.callback.onConnectionEstablished();
                     }
                 } catch (IOException ioe) {
@@ -222,7 +220,10 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
         }
     }
 
-      
+
+    /**
+     * {@link NonBlockingConnection#NonBlockingConnection(InetSocketAddress, boolean, int, java.util.Map, javax.net.ssl.SSLContext, boolean, IHandler, java.util.concurrent.Executor, Object)}
+     */
     public void connectAsync(SocketChannel channel, InetSocketAddress remoteAddress, long connectTimeoutMillis, IIoConnectorCallback callback) throws IOException {
         assert (channel.isOpen());
 
@@ -231,7 +232,7 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
             LOG.fine("try to connect " + remoteAddress + " (connect timeout " + DataConverter.toFormatedDuration(connectTimeoutMillis) + ")");
         }
         
-
+        // 非阻塞
         RegisterTask registerTask = new RegisterTask(channel, callback, remoteAddress, System.currentTimeMillis() + (long) connectTimeoutMillis);
         addToTaskQueue(registerTask);
                 
@@ -242,10 +243,9 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
         }
     }
     
-    
     private void addToTaskQueue(Runnable task) {
         taskQueue.add(task);
-        selector.wakeup();
+        selector.wakeup();	// 唤醒IoConnector#run()方法处的等待
     }
     
     
@@ -272,13 +272,18 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
             return (currentTime > expireTime); 
         }
         
-        
+        /**
+         * {@link #performTaskQueue()}
+         */
+        @Override
         public void run() {
           
             selectionKey = null;
             try {
+            	// 注册连接事件
                 selectionKey = channel.register(selector, SelectionKey.OP_CONNECT);
                 selectionKey.attach(this);
+                // 连接到远程地址
                 connect(channel, remoteAddress);
             
             } catch (IOException ioe) {
@@ -303,6 +308,7 @@ final class IoConnector extends MonitoredSelector implements Runnable, Closeable
             }
         }
         
+        // 连接到远程地址
         private void connect(SocketChannel channel, InetSocketAddress remoteAddress) throws IOException {
             try {
                 channel.connect(remoteAddress);

@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -80,6 +81,7 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 	// dispatcher handling
+	// 设置写的SelectionKey任务
 	private final SetWriteSelectionKeyTask setWriteSelectionKeyTask = new SetWriteSelectionKeyTask();
 	private IoSocketDispatcher dispatcher;
 
@@ -89,11 +91,12 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 	// receive & send queue
+	// 接收和发送的队列
 	private final IoQueue sendQueue = new IoQueue();
 
 
 	// write processor
-	private final int soSendBufferSize;
+	private final int soSendBufferSize;	// 默认8192
 	private IWriteTask pendingWriteTask = null;
 
 	
@@ -114,7 +117,7 @@ final class IoSocketHandler extends IoChainableHandler {
 	
 	
 	/**
-	 * {@link IoProvider#createIoHandler(boolean, IoSocketDispatcher, SocketChannel, SSLContext, boolean)} 处被调用.	</br>
+	 * {@link IoProvider#createIoHandler(boolean, IoSocketDispatcher, SocketChannel, javax.net.ssl.SSLContext, boolean)} 处被调用.	</br>
 	 * 
 	 * constructor
 	 *
@@ -331,9 +334,11 @@ final class IoSocketHandler extends IoChainableHandler {
 
         try {
 	        // write data to socket
+        	// 将数据写入到Socket
 	        writeSocket();
 	
 	        // more data to write?
+	        // 是否还有更多的数据要写
 	        if (hasMoreDataToWrite()) {
 	            if (LOG.isLoggable(Level.FINE)) {
 	                LOG.fine("[" + id + "] remaining data to send. remaining (" + DataConverter.toFormatedBytesSize(sendQueue.getSize()) + ")");
@@ -348,6 +353,7 @@ final class IoSocketHandler extends IoChainableHandler {
 
 	        	// .. no, unset write selection key 
 	        	} else {
+	        		// OP_WRITE事件执行完后将其取消掉
 	        		boolean isKeyUpdated = dispatcher.unsetWriteSelectionKeyNow(this);
 	        		if (isKeyUpdated) {
 	        			dispatcher.flushKeyUpdate();
@@ -385,7 +391,9 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 
-
+	/**
+	 * {@link NonBlockingConnection#internalFlush()} 处被调用.
+	 */
 	@Override
 	public void write(ByteBuffer[] buffers) throws ClosedChannelException, IOException {
 		addToWriteQueue(buffers);
@@ -406,6 +414,10 @@ final class IoSocketHandler extends IoChainableHandler {
 		initializeWrite(true);
 	}
 	
+	/**
+	 * {@link #write(ByteBuffer[])}		</br>
+	 * 加入到写队列.
+	 */
 	@Override
 	public void addToWriteQueue(ByteBuffer[] buffers) {
 		if (buffers != null) {
@@ -413,11 +425,9 @@ final class IoSocketHandler extends IoChainableHandler {
 		}
 	}
 	
-	
-	
-
-	
-
+	/**
+	 * 初始化写操作
+	 */
 	private void initializeWrite(boolean isBypassingSelectorAllowed) throws IOException {
 	    
 		// write within current thread
@@ -433,17 +443,21 @@ final class IoSocketHandler extends IoChainableHandler {
 			
 		// write with wake up
 		} else {
+			// 增加Write的key, 加入到keyUpdateQueue队列中
 			dispatcher.addKeyUpdateTask(setWriteSelectionKeyTask);
 		}
 	}
 	
 	
-	
+	/**
+	 * 设置写的SelectionKey的任务
+	 */
 	private final class	SetWriteSelectionKeyTask implements Runnable {
 
-		
+		@Override
 		public void run() {
 			try { 
+				// 设置OP_WRITE
 				dispatcher.setWriteSelectionKeyNow(IoSocketHandler.this);
 			} catch (Exception e) {
 				e = ConnectionUtils.toIOException("Error by set write selection key now " + e.toString(), e);
@@ -672,6 +686,8 @@ final class IoSocketHandler extends IoChainableHandler {
 			// no, create a new one
 			} else {
 				try {
+					// soSendBufferSize默认大小为8192
+					// 创建一个写的任务,任务本身不是一个线程
 					writeTask = TaskFactory.newTask(sendQueue, soSendBufferSize);
 				} catch (Throwable t) {
 					throw ConnectionUtils.toIOException(t);
@@ -680,8 +696,10 @@ final class IoSocketHandler extends IoChainableHandler {
 			
 			
 			// perform write task
+			// 执行写的任务
 			IWriteResult result = writeTask.write(this);			
 			
+			// 写任务还未完成,有剩余数据没写入
 			// is write task not complete?
 			if (result.isAllWritten()) {
 			    sendQueue.removeLeased();
@@ -831,16 +849,22 @@ final class IoSocketHandler extends IoChainableHandler {
    		private static ThreadLocal<DirectWriteTask> freeDirectWriteTaskThreadLocal = new ThreadLocal<DirectWriteTask>();
    		
    		
+   		/**
+   		 * {@link #writeSocket()}
+   		 */
    		static IWriteTask newTask(IoQueue sendQueue, int soSendBufferSize) {
    			
+   			// 要写入的数据
    			ByteBuffer[] buffersToWrite = sendQueue.lease(soSendBufferSize);
    			
    			// if no data to write?
+   			// 没有数据可写
 			if (buffersToWrite == null) {
 				return createEmptyWriteTask();
 			}
 			
-			
+			// 取决于逻辑处理器调用几次INonBlockingConnection.write()操作
+			// 数据的长度是否大于1, 如果是将其合并
 			// buffer array to write? 
 			if (buffersToWrite.length > 1) {
 				
@@ -853,8 +877,9 @@ final class IoSocketHandler extends IoChainableHandler {
 				}
 				
 			// ... no, just a single byte buffer
+			// 单个的ByteBuffer
 			} else {
-
+				
 				DirectWriteTask directWriteTask = createDirectWriteTask();
 				boolean dataToWrite = directWriteTask.addData(buffersToWrite[0]);
 				if (dataToWrite) {
@@ -938,10 +963,12 @@ final class IoSocketHandler extends IoChainableHandler {
 	
    	private static final class EmptyWriteTask implements IWriteTask {
 
+   		@Override
    		public IWriteResult write(IoSocketHandler handler) throws IOException {
    			return EMPTY_WRITE_RESULT;
    		}
    		
+   		@Override
    		public void release() {
    		    
    		}
@@ -1043,7 +1070,9 @@ final class IoSocketHandler extends IoChainableHandler {
     }
    	
     
-  
+    /**
+     * 处理单个的ByteBuffer
+     */
  	private static final class DirectWriteTask implements IWriteTask {
 
  		private boolean isReusable = true;
@@ -1060,7 +1089,10 @@ final class IoSocketHandler extends IoChainableHandler {
    			}
    		}
    
-   	
+   		/**
+   		 * 执行写操作
+   		 */
+   		@Override
    		public IWriteResult write(IoSocketHandler handler) throws IOException {
 
    			try {
@@ -1069,6 +1101,7 @@ final class IoSocketHandler extends IoChainableHandler {
    					LOG.fine("[" + handler.getId() + "] direct write task writing (" + (bufferToWrite.limit() - bufferToWrite.position()) + " bytes): " + DataConverter.toTextOrHexString(new ByteBuffer[] {bufferToWrite.duplicate() }, "UTF-8", MAXSIZE_LOG_READ));
    				}
 
+   				// XXX 往channel中写入数据,返回给客户端
    				int written = handler.channel.write(bufferToWrite);
    				handler.incSentBytes(written);
    				
@@ -1076,6 +1109,7 @@ final class IoSocketHandler extends IoChainableHandler {
  	 				LOG.fine("[" + handler.getId() + "] written (" + written + " bytes)");
 	 			}
 		   			
+   				// 没有全部写完
    				if (!bufferToWrite.hasRemaining()) {
    				    SingleBufferWriteResult writeResult = new SingleBufferWriteResult(handler, bufferToWrite);
    				    return writeResult;
@@ -1098,7 +1132,8 @@ final class IoSocketHandler extends IoChainableHandler {
    			}
    		}
    		
-   	   public void release() {
+   	    @Override
+   	    public void release() {
             bufferToWrite = null;
             if (isReusable) {
             	TaskFactory.reuseWriteProcessor(this);

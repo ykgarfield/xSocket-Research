@@ -31,7 +31,6 @@ import java.net.InetAddress;
  */
 public interface IConnection extends Closeable {
 
-
 	public static final String INITIAL_DEFAULT_ENCODING = "UTF-8";
 
 	/** Socket选项 */

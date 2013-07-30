@@ -127,6 +127,7 @@ final class IoQueue  {
 			buffers = data;
 
 		} else {
+			// 数据复制
 			ByteBuffer[] newBuffers = new ByteBuffer[buffers.length + data.length];
 			System.arraycopy(buffers, 0, newBuffers, 0, buffers.length);
 			System.arraycopy(data, 0, newBuffers, buffers.length, data.length);
@@ -194,11 +195,12 @@ final class IoQueue  {
 	 * lease 
 	 * 
      * @param maxSize  max size to drain if buffer array will be returned
+     * 		    默认大小8192
 	 *  
 	 * @return  the contained ByteBuffer array or <code>null</code>
 	 */
 	public synchronized ByteBuffer[] lease(int maxSize) {
-	
+		// 只有1个元素
 		if ((buffers != null) && (buffers.length == 1)) {
 		    ByteBuffer[] data = drain();
             leased = data;
@@ -210,6 +212,7 @@ final class IoQueue  {
             leased = data;
             return data;
 		
+        // FIXME 请求的最大长度 < 所有数据的长度, 暂时先不看.
 		} else {
 			ArrayList<ByteBuffer> result = new ArrayList<ByteBuffer>();
 			int remaining = maxSize;

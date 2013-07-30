@@ -67,6 +67,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 
 
 	static final int TRANSFER_BYTE_BUFFER_MAX_MAP_SIZE = IoProvider.getTransferByteBufferMaxSize();
+	
+	// 默认编码UTF-8
 	private final AtomicReference<String> defaultEncodingRef = new AtomicReference<String>(IConnection.INITIAL_DEFAULT_ENCODING);
 
 
@@ -1063,6 +1065,7 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 	public int write(String message, String encoding) throws IOException, BufferOverflowException, ClosedChannelException {
 		ensureStreamIsOpenAndWritable();
 		
+		// String转ByteBuffer
 		ByteBuffer buffer = DataConverter.toByteBuffer(message, encoding);
 		int written = buffer.remaining();
 

@@ -6,6 +6,7 @@ import java.nio.BufferUnderflowException;
 import java.nio.channels.ClosedChannelException;
 
 import org.xsocket.MaxReadSizeExceededException;
+import org.xsocket.connection.AbstractNonBlockingStream;
 import org.xsocket.connection.IConnectHandler;
 import org.xsocket.connection.IConnectionTimeoutHandler;
 import org.xsocket.connection.IDataHandler;
@@ -40,12 +41,15 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 		return false;
 	}
 
+	/**
+	 * 读/写的操作都在 {@link AbstractNonBlockingStream } 类中实现.
+	 */
 	@Override
 	public boolean onData(INonBlockingConnection nbc) throws IOException,
 			BufferUnderflowException, ClosedChannelException,
 			MaxReadSizeExceededException {
 		// readByte() : 读到一个字节就进行打印
-		char data = (char) nbc.readByte();
+//		char data = (char) nbc.readByte();
 		
 		// readInt()：读4个字节
 		// 如果客户端发送的字节为5个,那么会出现BufferUnderflowException异常,不过会被xSocket吞掉
@@ -57,13 +61,16 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 		// AbstractNonBlockingStream
 		// 如果没有找到指定的分隔符,会抛出BufferUnderflowException异常
 		// 不过xSocket会吞掉这个异常
-//		String data = nbc.readStringByDelimiter("\r\n");
+		String data = nbc.readStringByDelimiter("\r\n");
 		
 		System.out.println("从客户端接收到 : " + data);
 	
 		// 设置为自动刷新
 //		nbc.setAutoflush(true);
-		nbc.write("--|server:receive data from client sucessful| -----");
+		// 多次调用,那么xSocket会将每次调用的write()里的数据作为一个ByteBuffer存储
+		// 在实际写入的时候会将它们合并
+		nbc.write("hello\r\n");
+//		nbc.write("world");
 		// 触发OP_WRITE事件
 		nbc.flush();
 		return true;

@@ -53,6 +53,7 @@ final class IoProvider  {
 	private static final Logger LOG = Logger.getLogger(IoProvider.class.getName());
 
 	// socket选项
+	// 客户端可设置以下的所有选项
 	static final String SO_SNDBUF = IConnection.SO_SNDBUF;
 	static final String SO_RCVBUF = IConnection.SO_RCVBUF;
 	static final String SO_REUSEADDR = IConnection.SO_REUSEADDR;
@@ -68,10 +69,9 @@ final class IoProvider  {
 
 	
 	private static final Timer TIMER = new Timer("xIoTimer", true);
+	// 客户端使用
 	private static IoSocketDispatcherPool globalClientDispatcherPool;
 
-	
-	
 	// transfer props
     static final String TRANSFER_MAPPED_BYTE_BUFFER_MAX_MAP_SIZE_KEY = "org.xsocket.connection.transfer.mappedbytebuffer.maxsize";
     static final int DEFAULT_TRANSFER_BYTE_BUFFER_MAX_MAP_SIZE = 16384;
@@ -531,7 +531,6 @@ final class IoProvider  {
 		return createIoHandler(true, getGlobalClientDisptacherPool().nextDispatcher(), channel, null, false);
 	}
 
-
     /**
 	 * {@inheritDoc}
 	 */
@@ -539,9 +538,9 @@ final class IoProvider  {
     	return createIoHandler(true, getGlobalClientDisptacherPool().nextDispatcher(), channel, sslContext, sslOn);
     }
 
-
-
     /**
+     * 服务器端和客户端都会调用.	</br>
+     * 
      * SocketChannel设置为非阻塞.		</br>
      * 
      * {@link IoAcceptor#accept()}
@@ -789,7 +788,9 @@ final class IoProvider  {
 		return null;
 	}
 
-
+	/**
+	 * {@link #createClientIoHandler(SocketChannel)}
+	 */
 	static synchronized IoSocketDispatcherPool getGlobalClientDisptacherPool() {
 		if (globalClientDispatcherPool == null) {
 			globalClientDispatcherPool = new IoSocketDispatcherPool("ClientGlb", getClientDispatcherInitialSize());

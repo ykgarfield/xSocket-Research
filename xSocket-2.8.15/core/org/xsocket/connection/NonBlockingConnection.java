@@ -711,7 +711,21 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 
 	/**
-	 *  client constructor, which uses a specific dispatcher
+	 * 客户端的构造,使用指定的调度器.		</br>
+	 * client constructor, which uses a specific dispatcher
+	 * 
+	 * @param remoteAddress			要连接的地址
+	 * @param localAddress			本地地址,可以为null
+	 * @param waitForConnect		同步还是异步
+	 * @param connectTimeoutMillis	连接超时时间
+	 * @param options				Socket选项
+	 * @param sslContext
+	 * @param isSecured
+	 * @param appHdl				客户端的处理器
+	 * @param workerpool
+	 * @param autoflush				是否自动刷新
+	 * @param flushmode				刷新模式
+	 * @param attachment			附件,可为null
 	 */
 	private NonBlockingConnection(InetSocketAddress remoteAddress, InetSocketAddress localAddress, boolean waitForConnect, int connectTimeoutMillis, final Map<String, Object> options, final SSLContext sslContext, boolean isSecured,  IHandler appHdl, Executor workerpool, boolean autoflush, FlushMode flushmode, Object attachment) throws IOException {
 		setFlushmode(flushmode);
@@ -723,10 +737,16 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 		handlerAdapterRef.set(HandlerAdapter.newInstance(appHdl));
 		isServerSide = false;
 		
+		// 创建客户端SocketChannel
 		SocketChannel channel = openSocket(localAddress, options);
 		
+		// 创建IoConnector线程(打开Selector),并启动
 		IoConnector connector = getDefaultConnector();
 		
+		// XXX connectAsync() -> 添加连接任务 -> 唤醒IoConnector#run()处的等待, 处理连接事件 
+		// -> 连接成功, 触发IIoConnectorCallback的onConnectionEstablished()回调
+		// -> IoSocketHandler#init()方法,注册OP_READ事件
+		// 同步连接, 可先看这个
 		// sync connect
 		if (waitForConnect && (connectTimeoutMillis > 0)) {
 		    SyncIoConnectorCallback callback = new SyncIoConnectorCallback(remoteAddress, channel, sslContext, isSecured, connectTimeoutMillis);
@@ -794,11 +814,17 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	    ////////////////////////////////////
 	    // IIoConnectorCallback methods
 
+        /**
+         * {@link IoConnector#handleConnect()} 处被调用.
+         */
+        @Override
 	    public void onConnectionEstablished() throws IOException {
 	    	assert (ConnectionUtils.isConnectorThread());
+	    	// 创建IoHandler, 注册OP_READ事件
             register(channel, sslContext, isSecured, this);     
         }        
 	       
+        @Override
         public void onConnectError(IOException ioe) {
             this.ioe = ioe;
             
@@ -806,7 +832,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
             notifyWaiting();
         }
         
-
+        @Override
         public void onConnectTimeout() {
             this.ioe = new SocketTimeoutException("connect timeout " + DataConverter.toFormatedDuration(connectTimeoutMillis) +  " occured by connecting " + remoteAddress);
  
@@ -818,7 +844,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
         
         ////////////////
         // IIoHandlerCallback  methods 
-        
+        @Override
         public void onConnect() {
         	if (!isConnected.getAndSet(true)) {
 	        	// assign the  native callback handler
@@ -829,12 +855,12 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
         	}
         }
 
-        
+        @Override
         public void onConnectException(IOException ioe) {
         	ioHandlerCallback.onConnectException(ioe);
         }
         
-        
+        @Override
         public void onConnectionAbnormalTerminated() {
         	ioHandlerCallback.onConnectionAbnormalTerminated();        	
         }
@@ -916,6 +942,9 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	
 
 	/**
+	 * 只是给客户端的连接使用的.		</br>
+	 * {@link NonBlockingConnection.SyncIoConnectorCallback#onConnectionEstablished() }处连接建立成功后调用. </br></br>
+	 * 
 	 * will be used for client-side connections only 
 	 */
 	private void register(SocketChannel channel, SSLContext sslContext, boolean isSecured, IIoHandlerCallback handleCallback) throws IOException, SocketTimeoutException {
@@ -1002,6 +1031,8 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 	
 	/**
+	 * 私有构造函数中被调用.		</br></br>
+	 * 
      * returns the default connector 
      *  
      * @return  the default connector
@@ -1010,6 +1041,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
         if (defaultConnector == null) {
             defaultConnector = new IoConnector("default");
 
+            // 创建IoConnector线程,并启动
             Thread t = new Thread(defaultConnector);
             t.setDaemon(true);
             t.start();
@@ -2188,9 +2220,17 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 
 	/**
-	 * 业务处理端调用.	</br>
-	 * 比如	{@link helloworld.ServerHandler#onData(INonBlockingConnection)}	</br>
-	 * XXX 从这里才会去注册OP_WRITE事件.	</br></br>
+	 * <pre>
+	 * 服务器端调用：
+	 * 比如{@link helloworld.ServerHandler#onData(INonBlockingConnection)}	
+	 * XXX 从这里才会去注册OP_WRITE事件.
+	 * </pre>	
+	 * 
+	 * <pre>
+	 * 客户端调用:
+	 * 比如 {@link helloworld.XSocketClient#main(String[])}
+	 * 客户端先做OP_WRITE事件.
+	 * </pre>
 	 * 
 	 * {@inheritDoc}
 	 */
@@ -2206,7 +2246,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
     }
 
 	private void internalFlush(List<ByteBuffer> recoveryBuffer) throws ClosedChannelException, IOException {
-		
+		// 检查是否已关闭
 		if (!isOpen.get()) {
 		    if (getReadQueueSize() > 0) {
 		        throw new ClosedChannelException();
@@ -2218,15 +2258,18 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 		removeWriteMark();
 		
 		// is there data to flush?
+		// 是否由数据要刷新 -> 检查WriteQueue中的buffers是否为null
 		if (!isWriteBufferEmpty()) {
 			
+			// 同步刷新模式
 			// sync flush mode?
     		if (getFlushmode() == FlushMode.SYNC) {
     			synchronWriter.syncWrite(recoveryBuffer);
     			
+    		// 异步刷新模式, 先看这个
     		// ... no, async
     		} else {
-    		    ByteBuffer[] bufs = drainWriteQueue();
+    		    ByteBuffer[] bufs = drainWriteQueue();	// 所有写的数据
     		    
     		    if ((bufs != null) && (recoveryBuffer != null)) {
     		        for (ByteBuffer buf : bufs) {
@@ -2235,8 +2278,10 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
     		    }
     		    
     		    // IoSocketHandler
+    		    // 将写的数据加入到队列
     			ioHandler.write(bufs);
     			// XXX 注册OP_WRITE事件
+    			// 交由IoSocketDispatcher去处理写操作
     		    ioHandler.flush();
     		}
 		}
@@ -2349,6 +2394,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	    			pendingBuffers.addAll(Arrays.asList(data));
 	    			
 	    			// write the data and flush it
+	    			// IoSocketHandler
 	    			ioHandler.write(data);
 	    			ioHandler.flush();
 
@@ -2449,9 +2495,11 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 		}
 	}
 
-
-
-
+	
+	/**
+	 * 创建客户端的IoHandler	</br>
+	 * {@link #register(SocketChannel, SSLContext, boolean, IIoHandlerCallback)}
+	 */
 	private static IoChainableHandler createClientIoHandler(SocketChannel channel, SSLContext sslContext, boolean sslOn) throws IOException {
 		if (sslContext != null) {
 			return ConnectionUtils.getIoProvider().createSSLClientIoHandler(channel, sslContext, sslOn);
@@ -2462,6 +2510,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 
 	private static SocketChannel openSocket(InetSocketAddress localAddress, Map<String ,Object> options) throws IOException {
+		// 客户端Socket
         SocketChannel channel = SocketChannel.open();
 
         for (Entry<String, Object> entry : options.entrySet()) {
@@ -2469,6 +2518,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
         }
         
         if (localAddress != null) {
+        	// 绑定本地地址
             channel.socket().bind(localAddress);
         }
 

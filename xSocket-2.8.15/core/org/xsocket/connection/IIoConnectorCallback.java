@@ -22,11 +22,9 @@ package org.xsocket.connection;
 
 import java.io.IOException;
 
-
-
-
-
 /**
+ * 客户端连接回调.		</br></br>
+ * 
  * connector callback <br><br>
  *   
  * @author grro@xsocket.org
@@ -34,8 +32,9 @@ import java.io.IOException;
 interface IIoConnectorCallback {
 
 	/**
+	 * 连接建立.		</br></br>
+	 * 
 	 * notifies that the connection has been established
-	 *
 	 *
 	 * @throws IOException if an exception occurs
      */
@@ -44,6 +43,8 @@ interface IIoConnectorCallback {
 	
 	
 	/**
+	 * 连接错误.		</br></br>
+	 * 
 	 * notfifies a connect error
 	 * 
 	 * @param ioe the error
@@ -52,6 +53,8 @@ interface IIoConnectorCallback {
 	
 
     /**
+     * 连接超时.		</br>
+     * 
      * notifies that a connection timeout is occured 
      *
      */

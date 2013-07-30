@@ -20,7 +20,6 @@
  */
 package org.xsocket.connection;
 
-
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -28,9 +27,6 @@ import java.util.ArrayList;
 import org.xsocket.DataConverter;
 import org.xsocket.connection.AbstractNonBlockingStream.ISink;
 
-
-
- 
 /**
  * the WriteQueue
  * 
@@ -43,7 +39,8 @@ final class WriteQueue implements Cloneable {
 	
 	
 	// mark support
-	private RewriteableBuffer writeMarkBuffer = null;
+	// 在markWritePosition()方法中才会被实例化
+	private RewriteableBuffer writeMarkBuffer = null;	
 	private boolean isWriteMarked = false;
 	
 	
@@ -96,6 +93,8 @@ final class WriteQueue implements Cloneable {
 		
 	
 	/**
+	 * 加ByteBuffer加入到这个队列.	</br></br>
+	 * 
 	 * append a byte buffer to this queue.
 	 *
 	 * @param data the ByteBuffer to append
@@ -106,10 +105,12 @@ final class WriteQueue implements Cloneable {
 			return;
 		}
 				
+		// isWriteMarked默认为false
 		if (isWriteMarked) {
 			writeMarkBuffer.append(data);
 
 		} else {
+			// 默认执行这里
 			queue.append(data);
 		}
 	}
@@ -319,15 +320,17 @@ final class WriteQueue implements Cloneable {
 	}
 	
 	
-	
+	/**
+	 * 存储要写入的数据
+	 */
 	private static final class Queue implements ISink {
-
 		private ByteBuffer[] buffers;
 
 		
 		/**
 		 * clean the queue
 		 */
+		@Override
 		public synchronized void reset() {
 			buffers = null;
 		}
@@ -339,6 +342,7 @@ final class WriteQueue implements Cloneable {
 		 *
 		 * @return true, if empty
 		 */
+		@Override
 		public synchronized boolean isEmpty() {
 			return empty();
 		}
@@ -354,6 +358,7 @@ final class WriteQueue implements Cloneable {
 		 *
 		 * @return  the current size
 		 */
+		@Override
 		public synchronized int getSize() {
 			if (empty()) {
 				return 0;
@@ -373,14 +378,21 @@ final class WriteQueue implements Cloneable {
 		}
 		
 		
+		@Override
 		public synchronized void append(ByteBuffer data) {			
+			// 第一次
 			if (buffers == null) {
 				buffers = new ByteBuffer[1];
 				buffers[0] = data;
 									
+			// 第二次及以后
 			} else {
+				// 数据拷贝
+				// buffers中已有的数据的数组长度 + 1
 				ByteBuffer[] newBuffers = new ByteBuffer[buffers.length + 1];
+				// 最后一个元素为null
 				System.arraycopy(buffers, 0, newBuffers, 0, buffers.length);
+				// 最后一个元素的值为本次的ByteBuffer
 				newBuffers[buffers.length] = data;
 				buffers = newBuffers;
 			}
@@ -394,6 +406,7 @@ final class WriteQueue implements Cloneable {
 		 *
 		 * @param bufs  the list of ByteBuffer
 		 */
+		@Override
 		public synchronized void append(ByteBuffer[] bufs) {
 			if (buffers == null) {
 				buffers = bufs;
@@ -409,10 +422,13 @@ final class WriteQueue implements Cloneable {
 
 
 		/**
+		 * 返回buffers,并置为null.	</br></br>
+		 * 
 		 * drain the queue
 		 *
 		 * @return the queue content
 		 */
+		@Override
 		public synchronized ByteBuffer[] drain() {
 			ByteBuffer[] result = buffers;
 			buffers = null;
@@ -421,7 +437,7 @@ final class WriteQueue implements Cloneable {
 		}
 		
 		
-		
+		@Override
 		public synchronized ByteBuffer[] copy()  {
 			return ConnectionUtils.copy(buffers);
 		}
@@ -440,6 +456,7 @@ final class WriteQueue implements Cloneable {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public synchronized String toString(String encoding) {
 			StringBuilder sb = new StringBuilder();
 			if (buffers != null) {

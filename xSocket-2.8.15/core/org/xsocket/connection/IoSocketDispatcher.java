@@ -55,8 +55,10 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
     static final String DISPATCHER_PREFIX = "xDispatcher";
 	
 	// queues
-	private final ConcurrentLinkedQueue<Runnable> registerQueue = new ConcurrentLinkedQueue<Runnable>();	// RegisterTask
+    /** {@link RegisterTask} */
+	private final ConcurrentLinkedQueue<Runnable> registerQueue = new ConcurrentLinkedQueue<Runnable>();
 	private final ConcurrentLinkedQueue<IoSocketHandler> deregisterQueue = new ConcurrentLinkedQueue<IoSocketHandler>();
+	/** {@link IoSocketHandler.SetWriteSelectionKeyTask} */ 
 	private final ConcurrentLinkedQueue<Runnable> keyUpdateQueue = new ConcurrentLinkedQueue<Runnable>();
 
 	// id
@@ -207,13 +209,21 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	
 	
 	/**
-	 * {@link IoSocketDispatcherPool#updateDispatcher()}	</br>
-	 * 设置为后台线程. 处理读写事件.	</br>
-	 * 这里selector会处理OP_READ、OP_WRITE事件.	</br>
-	 * 在IoSocketDispatcher线程启动前,还未注册OP_READ事件.	</br>
-	 * OP_READ的事件要等待Server.start()执行时才会注册.		</br></br>
+	 * <pre>
+	 * 服务器端：
+	 * {@link IoSocketDispatcherPool#updateDispatcher()}	
+	 * 设置为后台线程. 处理读写事件.	
+	 * 这里selector会处理OP_READ、OP_WRITE事件.	
+	 * 在IoSocketDispatcher线程启动前,还未注册OP_READ事件.
+	 * OP_READ的事件要等待Server.start()执行时才会注册.		
 	 * 
-	 * XXX 看这段代码的时候暂停看while里面的流程,先看XSocketServer中主方法中的server.start()	</br>
+	 * XXX 看这段代码的时候暂停看while里面的流程,先看XSocketServer中主方法中的server.start()
+	 * <pre>
+	 * 
+	 * <pre>
+	 * 客户端：
+	 * 
+	 * </pre>
 	 */
 	@Override
 	public void run() {
@@ -238,12 +248,16 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 				// 只处理OP_READ、OP_WRITE事件
 				// 会被register()方法处被唤醒而立即返回
 				// 但此时还未执行OP_READ事件
+				
+				// addKeyUpdateTask()方法中也会被唤醒
 				int eventCount = selector.select(5000); 
 			
 				// 执行registerQueue中的RegisterTask任务
 				// RegisterTask任务中才会开始执行事件注册
 				handledTasks = performRegisterHandlerTasks();
 				//System.out.println("performRegisterHandlerTasks：" + handledTasks);
+				
+				// 执行key更新任务
 				handledTasks += performKeyUpdateTasks();
 				//System.out.println("performKeyUpdateTasks：            " + handledTasks);
 
@@ -513,10 +527,12 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 
 	
 	
-	
+	/**
+	 * {@link IoSocketHandler#initializeWrite()} 处被调用.	</br>
+	 */
 	public void addKeyUpdateTask(Runnable task) {
 		keyUpdateQueue.add(task);
-		wakeUp();
+		wakeUp();	// 唤醒run()方法的等待, 执行OP_WRITE操作
 	}
 	
 	
@@ -569,8 +585,9 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	}
 
 
-
-
+	/**
+	 * {@link IoSocketHandler.SetWriteSelectionKeyTask}
+	 */
 	private int performKeyUpdateTasks() {
 		int handledTasks = 0;
 
@@ -589,7 +606,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 
 
 	
-
+	// FIXME 
 	public boolean isDispatcherInstanceThread() {
 		Integer tbid = getThreadBoundId();
 		if ((tbid != null) && (tbid == id)) {
@@ -621,13 +638,18 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	public boolean setWriteSelectionKeyNow(final IoSocketHandler socketHandler) throws IOException {
 	    assert (isDispatcherInstanceThread());
 	    
+	    // 查找key, 先前注册的OP_READ并没有被移除
 	    SelectionKey key = getSelectionKey(socketHandler);
 	    if (key != null) {
+	    	// 当前的key是否已经为OP_WRITE
 	    	if (!isWriteable(key)) {
+	    		// 更新key
 	    		key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
 
 	    		return true;
 	    	}
+	    	// else 
+	    	// 已经是OP_WRITE不做处理
 	    } else {
 	    	throw new IOException("[" + socketHandler.getId() + "] Error occured by setting write selection key. key is null");
 	    }
@@ -635,7 +657,10 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
     	return false;
     }
 	
-	
+	/**
+	 * {@link #onWriteableEvent()} 中处理完写事件后被调用.	</br>
+	 * 取消OP_WRITE事件
+	 */
 	public boolean unsetWriteSelectionKeyNow(final IoSocketHandler socketHandler) throws IOException {
 	    assert (isDispatcherInstanceThread());
 	    
@@ -801,8 +826,12 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 		return false;
 	}
 
-	
+	/**
+	 * 之前的key是否已经为OP_WRITE
+	 */
 	private boolean isWriteable(SelectionKey key) {
+		// 如果已经是OP_WRITE
+		// 那么(key.interestOps() & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)是相等的
 		if ((key != null) && ((key.interestOps() & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE)) {
 			return true;
 		}
