@@ -100,7 +100,7 @@ final class IoSocketDispatcherPool implements Closeable {
 	
 	
 	/**
-	 * 取出一个IoSocketDispatcher
+	 * 有1个新的连接, 取出一个IoSocketDispatcher
 	 */
 	private IoSocketDispatcher nextDispatcher(int currentTrial) throws IOException {
 		IoSocketDispatcher dispatcher = null;

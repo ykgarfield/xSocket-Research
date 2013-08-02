@@ -140,6 +140,7 @@ final class IoSocketHandler extends IoChainableHandler {
 		this.dispatcher = dispatcher;
     	this.id = connectionId;    	
     	
+    	// 默认8192
     	soSendBufferSize = channel.socket().getSendBufferSize();
 	}
     

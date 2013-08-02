@@ -26,7 +26,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,6 +81,7 @@ final class IoAcceptor  {
     // 在accept()方法中接收请求,阻塞方式
     // 通过无限循环的方式等待客户端的连接
     // 而不是一般的通过在Selector中注册连接事件
+    /** 只能设置的Socket选项 {@link #setOption(String, Object)}  */
     private final ServerSocketChannel serverChannel;
 
 
@@ -232,9 +235,13 @@ final class IoAcceptor  {
     	// 接收请求
     	accept();
     }
+    
+    private final SimpleDateFormat sdf = new SimpleDateFormat("mm:ss.SSS");
 
     /**
-     * 无限循环接收请求.	</br>
+     * 无限循环接收请求.
+     * 有1个连接就分配一个IoSocketDispatcher去处理此连接的OP_READ、OP_WRITE事件
+     * 	</br>
      */
     private void accept() {
     	// 默认为true
@@ -244,6 +251,7 @@ final class IoAcceptor  {
             	// 阻塞接收
                 SocketChannel channel = serverChannel.accept();
 
+                System.out.println("接收到连接预处理开始：" + sdf.format(new Date()));
                 // create IoSocketHandler
                 // 取出一个IoSocketDispatcher
                 // 默认情况只创建两个IoSocketDispatcher
@@ -257,6 +265,7 @@ final class IoAcceptor  {
                 /** {@link Server.LifeCycleHandler} */
                 callback.onConnectionAccepted(ioHandler);
     			acceptedConnections++;
+    			System.out.println("接收到连接预处理结束：" + sdf.format(new Date()));
 
             } catch (Exception e) {
                 // if acceptor is running (<socket>.close() causes that any

@@ -302,8 +302,6 @@ final class IoProvider  {
 			sb.append(")");
 			LOG.fine(sb.toString());
 		}
-		
-		System.out.println("countDispatcher：" + countDispatcher);
      }
 
 

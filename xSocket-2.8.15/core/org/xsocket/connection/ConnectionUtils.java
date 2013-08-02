@@ -230,6 +230,9 @@ public final class ConnectionUtils {
 		// 直到startupListener的onInit()方法被调用
 		boolean isStarted = false;
 		try {
+			// 等待60秒
+			// 也可以自定义,直接在服务器端程序调用ConnectionUtils.start(IServer, timeoutSec)
+			// 和调用server.start()是一样的效果
 			isStarted = startedSignal.await(timeoutSec, TimeUnit.SECONDS);
 		} catch (InterruptedException ie) {
 			// Restore the interrupted status
@@ -240,6 +243,8 @@ public final class ConnectionUtils {
 
 		// timeout occurred?
 		// 超时抛异常
+		// 虽然这里抛出了异常,但是却不影响程序的继续执行, 服务器仍然能够正常启动
+		// 只是下面的代码不会被执行
 		if (!isStarted) {
 			throw new SocketTimeoutException("start timeout (" + DataConverter.toFormatedDuration((long) timeoutSec * 1000) + ")");
 		}
@@ -251,8 +256,6 @@ public final class ConnectionUtils {
 		// 移除启动监听
 		server.removeListener(startupListener);
 	}
-	
-	
 	
 	
 	/**

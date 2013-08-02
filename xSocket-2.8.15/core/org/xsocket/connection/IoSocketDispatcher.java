@@ -40,7 +40,9 @@ import org.xsocket.DataConverter;
 
 /**
  * 注释写错了,木有IDispatcher类.实现了Runable接口,作为一个后台线程,
- * 将在IoSocketDispatcherPool中被创建和启动.	</br></br>
+ * 将在IoSocketDispatcherPool中被创建和启动.	</br>
+ * 
+ * IoSocketDispatcher创建Selector来轮询OP_READ和OP_WRITE事件.	</br></br>
  * 
  * Implementation of the {@link IDispatcher}
  *
@@ -128,6 +130,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 		}
 
         if (LOG.isLoggable(Level.FINE)) {
+        	// FIXME　has been closed ? 是写错了还是?与这里不符
             LOG.fine("dispatcher " + this.hashCode() + " has been closed");
         }
 	}
@@ -217,7 +220,6 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	 * 在IoSocketDispatcher线程启动前,还未注册OP_READ事件.
 	 * OP_READ的事件要等待Server.start()执行时才会注册.		
 	 * 
-	 * XXX 看这段代码的时候暂停看while里面的流程,先看XSocketServer中主方法中的server.start()
 	 * <pre>
 	 * 
 	 * <pre>
@@ -229,6 +231,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	public void run() {
 		// set thread name and attach dispatcher id to thread
 		Thread.currentThread().setName(name);
+		// id从1开始顺位
 		THREADBOUND_ID.set(id);
 		
 		DIRECT_CALL_COUNTER.set(0);
@@ -250,6 +253,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 				// 但此时还未执行OP_READ事件
 				
 				// addKeyUpdateTask()方法中也会被唤醒
+				// XXX 看这段代码的时候暂停看while里面的流程,先看XSocketServer中主方法中的server.start()
 				int eventCount = selector.select(5000); 
 			
 				// 执行registerQueue中的RegisterTask任务

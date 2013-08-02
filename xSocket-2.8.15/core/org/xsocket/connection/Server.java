@@ -104,18 +104,16 @@ public class Server implements IServer {
 	private int maxConcurrentConnections = Integer.MAX_VALUE;
 	private boolean isMaxConnectionCheckAvtive = false;
 
-	
 	// handler replace Listener
 	// 处理器替换
     private final AtomicReference<IHandlerChangeListener> handlerReplaceListenerRef = new AtomicReference<IHandlerChangeListener>();
-
 	
 	// app handler
     // 在构造函数中调用setHandler()方法被处理
 	private HandlerAdapter handlerAdapter = HandlerAdapter.newInstance(null);
 	
-	
 	// thresholds
+	// 最大的读缓冲区
 	private Integer maxReadBufferThreshold = null;
 	
 	// timeouts
@@ -1113,7 +1111,8 @@ public class Server implements IServer {
 	private final class LifeCycleHandler implements IIoAcceptorCallback {
 
 		/**
-		 * {@link IoAcceptor#listen()}
+		 * {@link IoAcceptor#listen()}		</br>
+		 * 在接收请求之前被调用
 		 */
         @SuppressWarnings("unchecked")
         @Override
