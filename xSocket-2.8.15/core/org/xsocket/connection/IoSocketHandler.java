@@ -31,7 +31,6 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -237,7 +236,7 @@ final class IoSocketHandler extends IoChainableHandler {
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public Map<String, Class> getOptions() {
 		return Collections.unmodifiableMap(SUPPORTED_OPTIONS);
 	}
@@ -445,6 +444,7 @@ final class IoSocketHandler extends IoChainableHandler {
 		// write with wake up
 		} else {
 			// 增加Write的key, 加入到keyUpdateQueue队列中
+			//System.out.println("----------setWriteSelectionKeyTask----------");
 			dispatcher.addKeyUpdateTask(setWriteSelectionKeyTask);
 		}
 	}

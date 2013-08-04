@@ -2079,6 +2079,8 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 
 	/**
+	 * 如果设置了自动刷新, 那么立即调用internalFlush()方法(OP_WRITE事件).
+	 * 
 	 * {@inheritDoc}
 	 */
 	@Override

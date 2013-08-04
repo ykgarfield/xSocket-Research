@@ -15,7 +15,7 @@ public class XSocketServer {
 		JdkLogInit.init();
 		
 		// 创建一个服务端的对象 
-		// IoSocketDispatcherPool => 创建IoSocketDiaptcher线程,开始轮询OP_READ、OP_WRITE事件
+		// IoSocketDispatcherPool => 创建IoSocketDiaptcher线程,等待客户端的连接, 然后开始轮询OP_READ事件
 		IServer srv = new Server(PORT, new ServerHandler());
 		// 设置当前的采用的异步模式
 		srv.setFlushmode(FlushMode.ASYNC);

@@ -1420,7 +1420,9 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 
 
 	/**
-	 * notification, that data has been inserted 
+	 * 由子类覆盖.		</br></br>
+	 * 
+	 * notification, that data has been inserted. 
 	 * 
 	 * @throws IOException  if an exception occurs 
 	 * @throws ClosedChannelException  if the stream is closed

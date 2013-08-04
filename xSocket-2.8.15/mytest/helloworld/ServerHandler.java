@@ -67,10 +67,12 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 	
 		// 设置为自动刷新
 //		nbc.setAutoflush(true);
+		
 		// 多次调用,那么xSocket会将每次调用的write()里的数据作为一个ByteBuffer存储
 		// 在实际写入的时候会将它们合并
 		nbc.write("hello\r\n");
-//		nbc.write("world");
+		nbc.write("world\r\n");
+		
 		// 触发OP_WRITE事件
 		nbc.flush();
 		return true;

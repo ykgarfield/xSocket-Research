@@ -39,9 +39,9 @@ import org.xsocket.IDataSink;
 import org.xsocket.IDataSource;
 import org.xsocket.MaxReadSizeExceededException;
 
-
-
 /**
+ * 连接以非阻塞的方式访问底层的channel.		</br></br>
+ * 
  * A connection which accesses the underlying channel in a non-blocking manner. <br><br>
  *
  * @author grro@xsocket.org

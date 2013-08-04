@@ -236,7 +236,7 @@ final class IoAcceptor  {
     	accept();
     }
     
-    private final SimpleDateFormat sdf = new SimpleDateFormat("mm:ss.SSS");
+//    private final SimpleDateFormat sdf = new SimpleDateFormat("mm:ss.SSS");
 
     /**
      * 无限循环接收请求.
@@ -251,10 +251,10 @@ final class IoAcceptor  {
             	// 阻塞接收
                 SocketChannel channel = serverChannel.accept();
 
-                System.out.println("接收到连接预处理开始：" + sdf.format(new Date()));
+//                System.out.println("接收到连接预处理开始：" + sdf.format(new Date()));
                 // create IoSocketHandler
                 // 取出一个IoSocketDispatcher
-                // 默认情况只创建两个IoSocketDispatcher
+                // 默认情况只创建两个IoSocketDispatcher, 轮流使用
                 IoSocketDispatcher dispatcher = dispatcherPool.nextDispatcher();
                 // SocketChannel设置为非阻塞
                 // IoSocketHandler
@@ -265,7 +265,7 @@ final class IoAcceptor  {
                 /** {@link Server.LifeCycleHandler} */
                 callback.onConnectionAccepted(ioHandler);
     			acceptedConnections++;
-    			System.out.println("接收到连接预处理结束：" + sdf.format(new Date()));
+//    			System.out.println("接收到连接预处理结束：" + sdf.format(new Date()));
 
             } catch (Exception e) {
                 // if acceptor is running (<socket>.close() causes that any

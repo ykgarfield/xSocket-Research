@@ -259,6 +259,7 @@ class HandlerAdapter  {
                 }
                 
                 // XXX 执行业务逻辑的onData()方法
+                // 如果数据没有读完,那么会再次调用业务逻辑的onData()方法.直到读完或者发生了异常
                 // 比如：helloworld.ServerHandler
                 handler.onData(connection);
 
