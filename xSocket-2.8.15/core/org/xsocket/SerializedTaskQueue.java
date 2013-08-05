@@ -28,6 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * 序列化任务队列.	</br></br>
+ * 
  * Serialized Task Queue
  * 
  * <br/><br/><b>This is a xSocket internal class and subject to change</b> 

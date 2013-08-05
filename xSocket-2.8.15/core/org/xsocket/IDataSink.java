@@ -30,10 +30,10 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
 
-
-
-
 /**
+ * 写数据的操作.一个数据接收器是接收数据能力的I/O资源.		</br>
+ * 与 {@link IDataSource} 对应	</br></br>
+ * 
  * A data sink is an I/O resource capable of receiving data.
  * 
  * @author grro@xsocket.org

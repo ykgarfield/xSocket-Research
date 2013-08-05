@@ -32,10 +32,12 @@ import org.xsocket.ILifeCycle;
 import org.xsocket.MaxReadSizeExceededException;
 import org.xsocket.Resource;
 
-
-
-
 /**
+ * 实现一个handler链.链中的每个handler将被调用(安装注册顺序),
+ * 直到一个handler返回一个true值通知,事件已经被处理了.在这种情况下,剩余的handlers将不会被调用.	</br>
+ * 
+ * 嵌套的chains不支持.	</br></br>
+ * 
  * Implements a handler chain. Each handler of the chain will be called (in the registering order),
  * until one handler signal by the return value true, that the event has been handled. In 
  * this case the remaining handlers will not be called.  <br><br>
@@ -263,7 +265,7 @@ public final class HandlerChain implements  IHandler, IConnectHandler, IDataHand
 	
 	
 	/**
-	 * {@inheritDoc}
+	 * 链式调用.		</br>
 	 */
 	public boolean onConnect(final INonBlockingConnection connection) throws IOException, BufferUnderflowException, MaxReadSizeExceededException {
 		if (connectHandlerChain.isEmpty()) {
@@ -272,6 +274,7 @@ public final class HandlerChain implements  IHandler, IConnectHandler, IDataHand
 		
 		for (IConnectHandler connectHandler : connectHandlerChain) {
 		    boolean result = connectHandler.onConnect(connection);
+		    // 如果一个Handler的返回值为true,那么结束循环,剩余的Handler不再被调用.
 		    if (result == true) {
 		        return true;
 		    }

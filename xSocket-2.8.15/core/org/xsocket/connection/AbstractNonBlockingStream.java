@@ -48,10 +48,9 @@ import org.xsocket.DataConverter;
 import org.xsocket.MaxReadSizeExceededException;
 import org.xsocket.connection.IConnection.FlushMode;
 
-
- 
-
 /**
+ * 一个数据流的基本实现.		</br></br>
+ * 
  * implementation base of a data stream.   
  * 
  * <br/><br/><b>This is a xSocket internal class and subject to change</b> 

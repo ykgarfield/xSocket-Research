@@ -39,11 +39,11 @@ abstract class AbstractMemoryManager {
 	private static final Logger LOG = Logger.getLogger(AbstractMemoryManager.class.getName());
 	
 
+	// 以下4个变量都在构造中赋值
 	// direct or non-direct buffer
 	// 是否直接内存分配
 	private boolean useDirectMemory = false;
 
-	
 	// preallocation support
 	private int preallocationSize = 65536;
 	private int minPreallocatedBufferSize = 1;
@@ -83,6 +83,8 @@ abstract class AbstractMemoryManager {
 
 	
 	/**
+	 * 回收利用一个ByteBuffer.		</br></br>
+	 * 
 	 * recycle a ByteBuffer.  
 	 * 
 	 * @param buffer  the ByteBuffer to recycle 
@@ -94,6 +96,8 @@ abstract class AbstractMemoryManager {
 
 	
 	/**
+	 * 预分配,如果预分配大小小于给定的最小值		</br></br>
+	 * 
 	 * preallocate, if preallocated size is smaller the given minSize
 	 * 
 	 * @throws IOException if an exception occurs 
@@ -109,63 +113,51 @@ abstract class AbstractMemoryManager {
 	public abstract int getCurrentSizePreallocatedBuffer();
 
 	
+	
 	/**
-	 * {@inheritDoc}
+	 * 类中定义的4个变量的对应的setter/getter方法.		</br></br>
 	 */
 	public final boolean isPreallocationMode() {
 		return preallocate;
 	}
 	
-	
 	/**
-	 * {@inheritDoc}
 	 */
 	public final void setPreallocationMode(boolean mode) {
 		this.preallocate = mode;
 	}
 	
-	
 	/**
-	 * {@inheritDoc}
 	 */
 	public final void setPreallocatedMinBufferSize(Integer minSize) {
 		this.minPreallocatedBufferSize = minSize;
 	}
 	
-	
 	/**
-	 * {@inheritDoc}
 	 */
 	public final Integer getPreallocatedMinBufferSize() {
 		return minPreallocatedBufferSize;
 	}
 	
 	/**
-	 * {@inheritDoc}
 	 */
 	public final Integer getPreallocationBufferSize() {
 		return preallocationSize;
 	}
 	
-	
 	/**
-	 * {@inheritDoc}
 	 */
 	public final void setPreallocationBufferSize(Integer minSize) {
 		this.preallocationSize = minSize;
 	}
 
-	
 	/**
-	 * {@inheritDoc}
 	 */
 	public final boolean isDirect() {
 		return useDirectMemory;
 	}
 
-	
 	/**
-	 * {@inheritDoc}
 	 */
 	public final void setDirect(boolean isDirect) {
 		this.useDirectMemory = isDirect;
@@ -289,7 +281,6 @@ abstract class AbstractMemoryManager {
 	
 
 	/**
-	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString() {

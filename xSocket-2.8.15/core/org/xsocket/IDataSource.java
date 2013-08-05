@@ -29,7 +29,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
 /**
- * 读取数据的操作.	</br></br>
+ * 读取数据的操作.一个数据源是一个提供数据能力的I/O资源.	</br>
+ * 与 {@link IDataSink} 对应		</br></br>
  * 
  * A data source is an I/O resource capable of providing data.
  * 

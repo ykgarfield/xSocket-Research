@@ -36,6 +36,9 @@ import org.xsocket.SerializedTaskQueue;
 
 /**
 * 保存了IHandler实现类和其信息.	</br>
+* 
+* 执行连接、数据读/写、异常、连接超时等任务.	</br>
+* 
 * @author grro@xsocket.org
 */
 class HandlerAdapter  {

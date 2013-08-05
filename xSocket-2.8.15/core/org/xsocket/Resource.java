@@ -61,6 +61,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Resource {
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	Class type() default java.lang.Object.class; 
 }
