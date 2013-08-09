@@ -73,7 +73,7 @@ public class Server implements IServer {
     /** 超过最大连接的等待时间,默认500毫秒 */
     private static final int WAITTIME_MAXCONNECTION_EXCEEDED = Integer.parseInt(System.getProperty("org.xsocket.connection.server.waittimeMaxConnectionExceeded", Integer.toString(500)));
 
-    // 刷新模式
+    // 刷新模式, 默认SYNC
 	private FlushMode flushMode = IConnection.DEFAULT_FLUSH_MODE;
 	// 是否自动刷新
 	private boolean autoflush = IConnection.DEFAULT_AUTOFLUSH;
@@ -97,11 +97,12 @@ public class Server implements IServer {
 
 	
 	//connection manager
-	// XXX 创建Watchdog任务
+	// XXX 创建Watchdog任务, 用来监控连接的超时时间和空闲时间
 	/** {@link ConnectionManager.WachdogTask}*/
 	private ConnectionManager connectionManager = new ConnectionManager();
 	// 最大并发连接数
 	private int maxConcurrentConnections = Integer.MAX_VALUE;
+	// 是否最大连接检查激活
 	private boolean isMaxConnectionCheckAvtive = false;
 
 	// handler replace Listener
@@ -481,7 +482,7 @@ public class Server implements IServer {
 	 * @param sslContext           the ssl context to use
 	 * 
 	 * @param backlog              The maximum number number of pending connections. If has the value 0, or a negative value, then an implementation specific default is used.
-     * 							      等待连接的最大数目(0或者负使用默认值50)
+     * 							      等待连接的最大数目(0或者负数使用默认值50)
      * 
      * @param minPoolsize          The min workerpool size
      * 							      工作者池最小数目(默认为2)
@@ -535,12 +536,13 @@ public class Server implements IServer {
     	 * */
 		if (isOpen.get()) {
 			// 可以在执行了Server.start()之后重新设置IHander的实现
+			// 如果实现了ILifeCycle接口,那么将调用其onDestroy()方法
 			callCurrentHandlerOnDestroy();
 		}
 		
 		/**
 		 * FIXME：这段代码貌似无用,IHandlerChangeListener接口连实现类都没有.
-		 * 		    这是要让使用自己实现? 就算实现了,如果设置?
+		 * 		    这是要让使用自己实现? 就算实现了,也没方法设置.
 		 * 		  handlerReplaceListenerRef已经被声明为final,只能是xSocket内部自己处理.
 		 * 		    无解!!!
 		 */
@@ -558,12 +560,13 @@ public class Server implements IServer {
     
 	// 初始化当前的IHandler
 	private void initCurrentHandler() {
+		// 在handler中注入Server字段
 		ConnectionUtils.injectServerField(this, handlerAdapter.getHandler());
 		// 如果实现而来ILifeCycle接口,那么将调用其onInit()方法. 一般不实现此接口
 		handlerAdapter.onInit();
 	}
 	
-	
+	// 调用当前的handler的onDestroy()方法
 	private void callCurrentHandlerOnDestroy() {
 		handlerAdapter.onDestroy();
 	}
@@ -601,7 +604,6 @@ public class Server implements IServer {
 	
 	
 	/**
-	 * {@inheritDoc}
 	 */
 	public String getStartUpLogMessage() {
 		return startUpLogMessage;

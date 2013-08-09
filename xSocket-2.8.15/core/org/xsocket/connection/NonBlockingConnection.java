@@ -926,7 +926,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 	/**
 	 * 服务器端构造.		</br>
-	 * {@link Server.LifeCycleHandler#onConnectionAccepted(IoChainableHandler)} 处被调用	</br>
+	 * {@link Server.LifeCycleHandler#onConnectionAccepted(IoChainableHandler)} 处被调用	</br></br>
 	 * 
 	 *  server-side constructor
 	 */
@@ -936,6 +936,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 		isServerSide = true;
 		isConnected.set(true);
 		
+		// 超时处理
 		timeoutMgmHandle = connectionManager.register(this);
 	}
 
@@ -1282,7 +1283,6 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
      */
     @Override
     protected void onPostAppend() {
-    	System.out.println("maxReadBufferSize：" + maxReadBufferSize);
 
         // auto suspend support?
         if (maxReadBufferSize != null) {

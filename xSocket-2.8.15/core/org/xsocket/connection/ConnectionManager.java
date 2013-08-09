@@ -68,12 +68,15 @@ final class ConnectionManager {
 	}
 
 	
-	
-
+	/**
+	 * {@link NonBlockingConnection#NonBlockingConnection(ConnectionManager, HandlerAdapter)} 处被调用.	</br>
+	 * 一个连接注册一个.	</br>
+	 */
 	public TimeoutMgmHandle register(NonBlockingConnection connection) {
 		TimeoutMgmHandle mgnCon = new TimeoutMgmHandle(connection);
 		
 		WeakReference<TimeoutMgmHandle> ref = mgnCon.getWeakRef();
+		System.out.println("ref：" + ref);
 		if (ref != null) {
 		    synchronized (handles) {
 		        handles.add(ref);
@@ -216,6 +219,7 @@ final class ConnectionManager {
         
         synchronized (this) {
             
+        	// 任务存在,先终止
             // if watchdog task task already exits -> terminate it
             if (conCheckWatchDogTask != null) {
                 TimerTask tt = conCheckWatchDogTask;
@@ -302,7 +306,9 @@ final class ConnectionManager {
    
 
 	
-	
+	/**
+	 * 超时处理
+	 */
 	final class TimeoutMgmHandle {
 		
 		private final NonBlockingConnection con;

@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 
 /**
+ * 两个端点之间的连接(session).封装了底层的socket channel.	<br><br>
+ * 
  * A connection (session) between two endpoints. It encapsulates the underlying socket channel. <br><br>
  *
  * @author grro@xsocket.org
@@ -210,7 +212,7 @@ public interface IConnection extends Closeable {
 	 *
 	 * @return An unmodifiable map of the options supported by this channel
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	java.util.Map<String, Class> getOptions();
 	
 

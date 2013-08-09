@@ -86,6 +86,7 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 	// memory management
+	/** {@link #setMemoryManager(AbstractMemoryManager)} */
 	private AbstractMemoryManager memoryManager;
 
 
@@ -176,6 +177,9 @@ final class IoSocketHandler extends IoChainableHandler {
     }
 
 
+    /**
+     * {@link IoSocketDispatcher#register(IoSocketHandler, int)}
+     */
     void setMemoryManager(AbstractMemoryManager memoryManager) {
     	this.memoryManager = memoryManager;
     }
@@ -304,6 +308,13 @@ final class IoSocketHandler extends IoChainableHandler {
 		// 从Socket中读取数据
 		// read data from socket
 		ByteBuffer[] received  = readSocket();
+		
+		// 读取数据的操作不宜太复杂,消耗过多的时间
+//		try {
+//			Thread.sleep(3 * 1000);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
 
 		// handle the data
 		// 处理数据
@@ -570,7 +581,8 @@ final class IoSocketHandler extends IoChainableHandler {
 
 
 	/**
-	 * 从Socket中读取数据, 数组中只有1个元素
+	 * 从Socket中读取数据, 数组中只有1个元素.		</br>
+	 * 抛出的异常由{@link IoSocketDispatcher#onReadableEvent(IoSocketHandler)} 处理.
 	 */
 	private ByteBuffer[] readSocket() throws IOException {
 		assert (Thread.currentThread().getName().startsWith(IoSocketDispatcher.DISPATCHER_PREFIX)) : "receiveQueue can only be accessed by the dispatcher thread";

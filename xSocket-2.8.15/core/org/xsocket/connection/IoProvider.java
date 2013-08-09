@@ -472,7 +472,7 @@ final class IoProvider  {
 	 * @throws IOException
 	 */
 	public IoAcceptor createAcceptor(IIoAcceptorCallback callback, InetSocketAddress address, int backlog, Map<String, Object> options) throws IOException {
-		// 地址是否可重用, 默认为true
+		// 地址是否可重用, 默认为true, 必须在绑定到端口之前设置
         Boolean isReuseAddress = (Boolean) options.get(IConnection.SO_REUSEADDR);
         if (isReuseAddress == null) {
         	// 默认可以
@@ -482,7 +482,6 @@ final class IoProvider  {
         // XXX 创建IoAcceptor => 创建ServerSocketChannel,阻塞模式
         // XXX 创建IoSocketDispatcher线程,并启动
         IoAcceptor acceptor = new IoAcceptor(callback, address, backlog, isReuseAddress);
-        // 设置属性选项
         // 设置Socket选项
 		for (Entry<String, Object> entry : options.entrySet()) {
 			acceptor.setOption(entry.getKey(), entry.getValue());

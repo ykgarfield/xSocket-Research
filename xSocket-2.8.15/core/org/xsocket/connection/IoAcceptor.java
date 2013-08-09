@@ -39,6 +39,8 @@ import javax.net.ssl.SSLContext;
 
 import org.xsocket.DataConverter;
 
+import run_server_in_multi_thread.MyServer;
+
 /**
  * 负责接收连接和注册到dispatcher中	</br>
  * accept()、listen()		</br>
@@ -91,12 +93,12 @@ final class IoAcceptor  {
 
 
     // dispatcher pool
-    // 调度池
+    // 调度池, 管理IoSocketDispatcher
     private final IoSocketDispatcherPool dispatcherPool;
 
     
     // statistics
-    private long acceptedConnections;	// 连接数
+    private long acceptedConnections;	// 连接数, 不是线程安全的
 	private long lastRequestAccpetedRate = System.currentTimeMillis();
 
 
@@ -130,7 +132,7 @@ final class IoAcceptor  {
         	// 绑定地址
             serverChannel.socket().bind(address, backlog);
             
-            // 默认大小为2
+            // IoSocketDispatcher的数量为2
             // XXX 创建IoSocketDispatcher线程,并启动
             // IoSocketDispatcherPool#updateDispatcher()
             dispatcherPool = new IoSocketDispatcherPool("Srv" + getLocalPort(), IoProvider.getServerDispatcherInitialSize());
@@ -236,6 +238,7 @@ final class IoAcceptor  {
     	accept();
     }
     
+    // 测试取得一个连接耗费的时间
 //    private final SimpleDateFormat sdf = new SimpleDateFormat("mm:ss.SSS");
 
     /**
@@ -250,6 +253,9 @@ final class IoAcceptor  {
                 // blocking accept call
             	// 阻塞接收
                 SocketChannel channel = serverChannel.accept();
+                
+                // 加上自己的,看收到的连接运行在哪个线程中.
+                //System.out.println("MyServer : " + MyServer.serverInThreadName.get());
 
 //                System.out.println("接收到连接预处理开始：" + sdf.format(new Date()));
                 // create IoSocketHandler
@@ -258,14 +264,17 @@ final class IoAcceptor  {
                 IoSocketDispatcher dispatcher = dispatcherPool.nextDispatcher();
                 // SocketChannel设置为非阻塞
                 // IoSocketHandler
+                // 1个客户端连接 -- 1个IoSocketDispatcher( -- 1个 IoUnsynchronizedMemoryManager) -- 多个IoSocketHandler  
                 IoChainableHandler ioHandler = ConnectionUtils.getIoProvider().createIoHandler(false, dispatcher, channel, sslContext, sslOn);
 
                 // notify call back
                 // XXX 注册OP_READ事件
                 /** {@link Server.LifeCycleHandler} */
                 callback.onConnectionAccepted(ioHandler);
+                // 线程不安全,运行RunServerInMultiThread,多个线程中运行Server就会出现问题
     			acceptedConnections++;
 //    			System.out.println("接收到连接预处理结束：" + sdf.format(new Date()));
+//    			System.out.println("acceptedConnections：" + acceptedConnections);
 
             } catch (Exception e) {
                 // if acceptor is running (<socket>.close() causes that any

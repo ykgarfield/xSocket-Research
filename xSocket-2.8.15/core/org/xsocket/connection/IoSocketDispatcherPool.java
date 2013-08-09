@@ -79,6 +79,7 @@ final class IoSocketDispatcherPool implements Closeable {
 	public IoSocketDispatcherPool(String name, int size) {
 		this.name = name;
 		// 设置调度程序的大小, 创建IoSocketDispatcher线程
+		// 
 		setDispatcherSize(size);
     }
     
@@ -116,12 +117,16 @@ final class IoSocketDispatcherPool implements Closeable {
 			// 比如,如果IoSocketDispatcherPool中有3个IoSocketDispatcher
 			// 那么这里取出IoSocketDispatcher的顺序为：
 			// 1 -> 2 -> 0 -> 1 -> 2 -> 0 -> 1 -> 2 -> 0 ...
+			// 但是如果在多线程环境中,那么就可能不会顺序调用.
+			// 不过在多线程环境中,pointer++的操作肯定会产生并发问题的,导致了pointer的值超过了size
+			// 不过这里做了pointer >= size的操作,所以也不会产生从dispatchers.get(pointer)的时候出现IndexOutOfBoundsException问题
 			pointer++;
 			if (pointer >= size) { // unsynchronized access of size is OK here (findbugs will criticize this)
 				// 继续从0开始取
 				pointer = 0;
 			}
 	
+			System.out.println("IoSocketDispatcher pointer：" + pointer);
 			dispatcher = dispatchers.get(pointer);
 			// 默认返回true
 			boolean peregistered = dispatcher.preRegister();
@@ -317,7 +322,12 @@ final class IoSocketDispatcherPool implements Closeable {
     
 	/**
 	 * 设置大小.</br>
-	 * FIXME :这里为什么需要同步? 
+	 * FIXME :这里为什么需要同步? 		</br>
+	 * <pre>
+	 * 1. 在构造函数中调用此方法：
+	 * IoSocketDispatcherPool的实例化过程是在实例化Server的过程中实现的.
+	 * 实例化Server不会发生在两个线程之中.那么也就没有必要在此进行同步.
+	 * </pre>
 	 */
 	synchronized void setDispatcherSize(int size) {
     	this.size = size;

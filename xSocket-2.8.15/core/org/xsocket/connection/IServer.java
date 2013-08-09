@@ -88,6 +88,9 @@ import org.xsocket.connection.IConnection.FlushMode;
  */
 public interface IServer extends Runnable, Closeable {
 
+	/**
+	 * 除了SO_RCVBUF、SO_REUSEADDR外,其它的几个变量都没有任何地方使用.
+	 */
 
 	/**
 	 * 默认的空闲超时时间,1个小时		</br></br>

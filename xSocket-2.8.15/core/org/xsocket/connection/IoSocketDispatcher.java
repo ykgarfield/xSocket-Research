@@ -59,6 +59,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	// queues
     /** {@link RegisterTask} */
 	private final ConcurrentLinkedQueue<Runnable> registerQueue = new ConcurrentLinkedQueue<Runnable>();
+	// 读/写过程中发生错误
 	private final ConcurrentLinkedQueue<IoSocketHandler> deregisterQueue = new ConcurrentLinkedQueue<IoSocketHandler>();
 	/** {@link IoSocketHandler.SetWriteSelectionKeyTask} */ 
 	private final ConcurrentLinkedQueue<Runnable> keyUpdateQueue = new ConcurrentLinkedQueue<Runnable>();
@@ -69,7 +70,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	private final String name;	
 	private final int id;
 	private final static ThreadLocal<Integer> THREADBOUND_ID = new ThreadLocal<Integer>();
-	private final static ThreadLocal<Integer> DIRECT_CALL_COUNTER = new ThreadLocal<Integer>();
+	private final static ThreadLocal<Integer> DIRECT_CALL_COUNTER = new ThreadLocal<Integer>();	// 只在run()方法中被使用了,其它地方没有被使用,不知道有何作用
 	
 
 	// flags
@@ -275,6 +276,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 					handleReadWriteKeys();
 				}
 
+				// 读/写发生错误
 				handledTasks += performDeregisterHandlerTasks();
 				//System.out.println("handledTasks：                              " + handledTasks);
 				
@@ -289,6 +291,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 		}
 
 
+		// IoSocketDispatcher关闭
         for (IoSocketHandler socketHandler : getRegistered()) {
             socketHandler.onDeregisteredEvent();
         }
@@ -358,6 +361,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 			handledReads++;
 			
 		} catch (Exception t) {
+			// 读取操作发生异常, 取消这个事件. 但连接不会断开.
 		    SelectionKey key = getSelectionKey(socketHandler);
 		    if ((key != null) && key.isValid()) {
                 key.cancel();               
@@ -400,7 +404,9 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	boolean preRegister() {
 
         // inc rough num of registered handles
+		// 粗略地增加注册的handlers的数目
         roughNumOfRegisteredHandles++;
+        //System.out.println("roughNumOfRegisteredHandles：" + roughNumOfRegisteredHandles);
 
         // check if max size reached
         // 处理的最大值
@@ -417,7 +423,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 
 	
 	/**
-	 * 注册读/写事件
+	 * 注册读/写事件,socketHandler作为Selector的附件
 	 */
 	public boolean register(IoSocketHandler socketHandler, int ops) throws IOException {
 		assert (!socketHandler.getChannel().isBlocking());
@@ -445,7 +451,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 
 
 	/**
-	 * 注册事件任务
+	 * 注册事件任务.		</br>
 	 */
 	private final class RegisterTask implements Runnable {
 
@@ -457,6 +463,9 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 			this.ops = ops;
 		}
 		
+		/**
+		 * {@link #performRegisterHandlerTasks()}
+		 */
 		@Override
 		public void run() {
 			try {
@@ -470,7 +479,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	
 
 	/**
-	 * {@inheritDoc}
+	 * {@link IoSocketDispatcher#run()}
 	 */
 	public void deregisterAndClose(IoSocketHandler handler) {
 	    
@@ -612,7 +621,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	
 	// FIXME 
 	public boolean isDispatcherInstanceThread() {
-		Integer tbid = getThreadBoundId();
+		Integer tbid = getThreadBoundId();	// 当前IoSocketDispatcher线程的ID
 		if ((tbid != null) && (tbid == id)) {
 			return true;
 		}
@@ -736,7 +745,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 	 * 执行注册事件任务. </br>
 	 */
 	private int performRegisterHandlerTasks() throws IOException {
-		int handledTasks = 0;
+		int handledTasks = 0;	// 此变量也没什么作用
 
 		while (true) {
 			// RegisterTask
