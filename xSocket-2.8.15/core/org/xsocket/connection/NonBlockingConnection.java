@@ -128,15 +128,12 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	private final AtomicReference<HandlerAdapter> handlerAdapterRef = new AtomicReference<HandlerAdapter>(null);
     private final AtomicReference<IHandlerChangeListener> handlerReplaceListenerRef = new AtomicReference<IHandlerChangeListener>();
 
-
-
 	// execution
 	private Executor workerpool;
 	
-	
 	// task Queue
+	// 任务队列
 	private final SerializedTaskQueue taskQueue = new SerializedTaskQueue();
-
 	
     // write transfer rate
     private int bytesPerSecond = UNLIMITED;
@@ -1157,6 +1154,8 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	}
 	
 	/**
+	 * {@link Server.LifeCycleHandler#init(NonBlockingConnection, IoChainableHandler) }		</br>
+	 * 
 	 * sets the worker pool 
 	 * @param workerpool  the worker pool
 	 */
@@ -1247,6 +1246,11 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	
 	
 	
+	/**
+	 * 将接收到的数据追加到读缓冲.		</br></br>
+	 * 
+	 * {@link IoHandlerCallback#onData(ByteBuffer[], int)}
+	 */
 	private void onData(ByteBuffer[] data, int size) {
 	    /**
 	     * if data is received, the data will be appended to the read buffer by 
@@ -1260,6 +1264,15 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	     * The caller (e.g. IoSocketHandler) will always perform the onPostData method 
 	     * the after calling this method. Within the onPostData the handler's onData 
 	     * method will be called
+	     * 
+	     * 
+	     * 如果接受到数据,将使用父类的appendDataToReadBuffer()方法将数据追加到读缓冲.
+	     * 在父类方法中,这个类的onPostAppend()方法将被调用在父类方法返回之前.
+	     * 
+	     * onPostAppend()方法检查最大的读缓冲是否达到.如果为true,接收将中断.
+	     * 
+	     * 调用者(比如,IoSocketHandler)将总是执行在调用这个方法之后执行onPostData()方法.
+	     * 在onPostData()方法中handler的onData()方法将被调用.
 	     */
 	    
 		if (data != null) {
@@ -1270,8 +1283,9 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 		}
 	}
 	
-	
 	/**
+	 * {@link AbstractNonBlockingStream#appendDataToReadBuffer(ByteBuffer[], int)}	</br>
+	 * 
 	 * 将在接收到的数据加入到ReadQueue之后被调用.
 	 * 将检查最大的读缓冲是否已经能达到.如果达到,接收将暂停.	</br></br>
 	 * 
@@ -1285,6 +1299,8 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
     protected void onPostAppend() {
 
         // auto suspend support?
+    	// 是否支持终止
+//    	System.out.println("maxReadBufferSize：" + maxReadBufferSize);
         if (maxReadBufferSize != null) {
             
             // check if receiving has to be suspended
@@ -1349,7 +1365,11 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 	
 
     /**
-     * 这个方法在调用onData()方法后调用.	</br></br>
+     * {@link IoHandlerCallback#onPostData()}	</br>
+     * 
+     * 这个方法在调用onData()方法后调用.
+     * 执行hander的onData().
+     * </br></br>
      * 
      * This method will be called (by IoSocketHandler) after the onData method 
      * is called

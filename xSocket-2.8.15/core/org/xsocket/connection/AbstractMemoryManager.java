@@ -186,6 +186,8 @@ abstract class AbstractMemoryManager {
 				buffer.position(buffer.limit());
 				buffer.limit(buffer.capacity());
 			
+				// 回收利用内存
+				// 子类实现
 				recycleMemory(buffer);
 			}
 			

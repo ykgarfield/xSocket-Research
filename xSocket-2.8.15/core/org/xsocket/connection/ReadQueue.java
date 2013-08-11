@@ -30,9 +30,6 @@ import org.xsocket.DataConverter;
 import org.xsocket.MaxReadSizeExceededException;
 import org.xsocket.connection.AbstractNonBlockingStream.ISource;
 
-
-
-
 /**
  *
  * 
@@ -101,6 +98,7 @@ final class ReadQueue {
 	}
 	
 	
+	// 计算bufs中的可用数据
 	private static int computeSize(ByteBuffer[] bufs) {
 		int size = 0;
 		for (ByteBuffer buf : bufs) {
@@ -301,9 +299,9 @@ final class ReadQueue {
 		// queue
 		private ByteBuffer[] buffers = null;	// 所有读取的数据
 		
-		private Integer currentSize = null; 	// 当前字节的大小
-		private int version = 0;
-		private boolean isAppended = false;
+		private Integer currentSize = null; 	// 当前读取的数据的大小
+		private int version = 0;				// 操作的版本
+		private boolean isAppended = false;		// 是否追加
 
 		
 		// cache support
@@ -379,6 +377,8 @@ final class ReadQueue {
 
 
 		/**
+		 * {@link ReadQueue#append(ByteBuffer[], int)}	</br>
+		 * 
 		 * 将ByteBuffer数组添加到队列中.	</br></br>
 		 * 
 		 * append a byte buffer array to this queue. By adding a array,

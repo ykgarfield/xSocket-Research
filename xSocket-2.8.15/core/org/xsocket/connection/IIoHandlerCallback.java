@@ -23,9 +23,6 @@ package org.xsocket.connection;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-
-
-
 /**
  * Call back interface to notify io events of the {@link IIoHandler}. The IIoHandler
  * is responsible to notify the events in the occured order. <br><br>
@@ -38,6 +35,8 @@ interface IIoHandlerCallback {
 		
 	
 	/**
+	 * 通知已经从socket中读取了数据.		</br></br>
+	 * 
 	 * notifies that data has been read from the socket. <br><br>
 	 * 
 	 * @param data  the received data
@@ -46,9 +45,9 @@ interface IIoHandlerCallback {
 	 */
 	void onData(ByteBuffer[] data, int size);
 	
-	
-	
 	/**
+	 * 通知取得数据已经完成.		</br></br>
+	 * 
 	 * notifies that data read taks has been completed <br><br>
 	 *
 	 */

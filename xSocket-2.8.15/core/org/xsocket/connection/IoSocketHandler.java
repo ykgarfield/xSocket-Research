@@ -327,11 +327,14 @@ final class IoSocketHandler extends IoChainableHandler {
 
 			/** {@link NonBlockingConnection.IoHandlerCallback} */
 			getPreviousCallback().onData(received, size);
+			
 			/** {@link NonBlockingConnection.IoHandlerCallback} */
+			// XXX 交由HandlerAdapter.PerformOnDataTask线程去处理
 			getPreviousCallback().onPostData();
 		}
 
 		// increase preallocated read memory if not sufficient
+		// 如果不够的话增加预分配的读内存
 		checkPreallocatedReadMemory();
 
 		return read;
@@ -670,6 +673,8 @@ final class IoSocketHandler extends IoChainableHandler {
 	
 
 	/**
+	 * 检查预分配的读缓冲是否足够,不够增加.		</br></br>
+	 * 
 	 * check if preallocated read buffer size is sufficient. if not increase it
 	 */
 	private void checkPreallocatedReadMemory() throws IOException {

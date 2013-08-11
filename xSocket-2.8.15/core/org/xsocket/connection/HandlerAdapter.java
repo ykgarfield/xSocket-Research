@@ -209,7 +209,9 @@ class HandlerAdapter  {
 
 	
     /**
-     * 执行onData()
+     * 执行onData()		</br>
+     * 
+     * {@link HandlerAdapter#onData(INonBlockingConnection, SerializedTaskQueue, Executor, boolean, boolean)}
      */
     private static final class PerformOnDataTask implements Runnable {
     	
@@ -235,9 +237,10 @@ class HandlerAdapter  {
             return "PerformOnDataTask#" + hashCode() + " "  + connection.getId();
         }
     }
-    
 
 	/**
+	 * {@link PerformOnDataTask#run()}
+	 * 
 	 * @param ignoreException	是否忽略超过了最大的读字节数目的异常
 	 */
 	private static void performOnData(INonBlockingConnection connection, SerializedTaskQueue taskQueue, boolean ignoreException, IDataHandler handler) {
@@ -257,6 +260,7 @@ class HandlerAdapter  {
                 int version = connection.getReadBufferVersion();
                 
                 // calling onData method of the handler (return value will be ignored)
+                // 调用handler的onData()方法(返回值将忽略)
                 if (LOG.isLoggable(Level.FINE)) {
                     LOG.fine("[" + connection.getId() + "] calling onData method of handler " + printHandler(handler));
                 }
@@ -266,7 +270,23 @@ class HandlerAdapter  {
                 // 比如：helloworld.ServerHandler
                 handler.onData(connection);
 
-                // FIXME：
+                // 加上自己的测试, 模拟读缓冲版本的改变
+//                System.out.println("version : " + version);
+//                Thread.sleep(5 * 1000);
+//                System.out.println("version : " + version);
+//                System.out.println("version equals : " + (version == connection.getReadBufferVersion()));
+                /*
+                 	从客户端接收到 : a
+					version : 2
+					version : 2
+					version equals : false
+					从客户端接收到 : b
+					version : 5
+                 */
+                
+                // 如果操作的过程中读缓冲的数据被改变了
+                // 一个Connection -- 一个ReadQueue
+                // 有可能会在执行的过程中发了延迟或者阻塞,从而导致了读缓冲的改变(版本的改变)
                 if (version == connection.getReadBufferVersion()) {
                     return;
                 }

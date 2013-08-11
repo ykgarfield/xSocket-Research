@@ -305,6 +305,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 	
 	
 	/**
+	 * 得到读缓冲的版本.版本会增加,如果读缓冲被改变.	</br></br>
+	 * 
 	 * get the version of read buffer. The version number increases, if
 	 * the read buffer queue has been modified 
 	 *
@@ -1491,6 +1493,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 
 
 	/**
+	 * 将数据追加到读缓冲			</br></br>
+	 * 
 	 * append data to the read buffer
 	 * 
 	 * @param data the data to append
@@ -1499,7 +1503,6 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 		readQueue.append(data, size);
 		onPostAppend();
 	}
-	
 	
 	// 由子类覆盖
 	protected void onPostAppend() {
@@ -1613,6 +1616,9 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 	}	
 	
 	
+	/**
+	 * {@link ReadQueue.Queue }
+	 */
 	public static interface ISource {
 	        
 
