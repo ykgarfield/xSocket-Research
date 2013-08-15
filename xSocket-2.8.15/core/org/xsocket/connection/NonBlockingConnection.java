@@ -56,8 +56,6 @@ import org.xsocket.SerializedTaskQueue;
 import org.xsocket.connection.ConnectionManager.TimeoutMgmHandle;
 import org.xsocket.connection.ConnectionUtils.CompletionHandlerInfo;
 
-
-
 /**
  * Implementation of the <code>INonBlockingConnection</code> interface. <br><br>
  *
@@ -922,7 +920,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 
 
 	/**
-	 * 服务器端构造.		</br>
+	 * 服务器端构造.先执行静态代码块		</br>
 	 * {@link Server.LifeCycleHandler#onConnectionAccepted(IoChainableHandler)} 处被调用	</br></br>
 	 * 
 	 *  server-side constructor
@@ -1085,6 +1083,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
 		this.ioHandler = ioHandler;
 		
 		// IoSocketHandler
+		// OP_READ事件
 		ioHandler.init(handlerCallback);
 		
 		isConnected.set(true);
@@ -1368,7 +1367,7 @@ public final class NonBlockingConnection extends AbstractNonBlockingStream imple
      * {@link IoHandlerCallback#onPostData()}	</br>
      * 
      * 这个方法在调用onData()方法后调用.
-     * 执行hander的onData().
+     * 执行hander的onData().交由线程池去处理.
      * </br></br>
      * 
      * This method will be called (by IoSocketHandler) after the onData method 

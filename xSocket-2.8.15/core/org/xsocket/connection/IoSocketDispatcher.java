@@ -308,7 +308,7 @@ final class IoSocketDispatcher extends MonitoredSelector implements Runnable, Cl
 
 
 	/**
-	 * 处理读写事件
+	 * XXX 处理读写事件
 	 */
 	private void handleReadWriteKeys() {
 		Set<SelectionKey> selectedEventKeys = selector.selectedKeys();

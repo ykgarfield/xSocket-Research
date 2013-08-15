@@ -152,6 +152,9 @@ final class ReadQueue {
 	}
 
 	
+	/**
+	 * 根据指定分隔符和最大长度读取读缓冲
+	 */
 	public ByteBuffer[] readByteBufferByDelimiter(byte[] delimiter, int maxLength) throws IOException, BufferUnderflowException, MaxReadSizeExceededException {
 		ByteBuffer[] buffers = queue.readByteBufferByDelimiter(delimiter, maxLength);
 		onExtracted(buffers, delimiter);
@@ -305,6 +308,7 @@ final class ReadQueue {
 
 		
 		// cache support
+		// 缓存支持
 		private Index cachedIndex = null;
 
 		
@@ -352,7 +356,11 @@ final class ReadQueue {
 		}
 
 		
+		/**
+		 * 得到缓冲区的大小
+		 */
 		private int size() {
+			// 性能优化：如果大小已经计算过
 			// performance optimization if size has been already calculated
 			if (currentSize != null) {
 				return currentSize;
@@ -400,7 +408,7 @@ final class ReadQueue {
 				currentSize = size;
 									
 			}  else {
-				// 第二次
+				// 第二次及以后
 				currentSize = null;
 				
 				// 数据复制
@@ -428,6 +436,9 @@ final class ReadQueue {
 		}
 
 		
+		/**
+		 * 
+		 */
 		private void addFirstSilence(ByteBuffer[] bufs) {
 			currentSize = null;
 						
@@ -592,7 +603,7 @@ final class ReadQueue {
 									// 结束循环
 									break bufLoop;
 								}
-							}
+							} // end while
 						}
 			
 						buffers[j] = null;
@@ -639,26 +650,34 @@ final class ReadQueue {
 				}
 			}
 			
-
+			// 查找指定分隔符的索引位置
 			int index = retrieveIndexOf(delimiter, maxLength);
 				
 			// delimiter found?
+			// 是否找到了指定的分隔符
 			if (index >= 0) {
+				// 返回提取出的ByteBuffers
 				return extract(index, delimiter.length);
 
 			} else { 
+				// 找不到抛异常, 不会被被xSocket吞掉
+				/** {@link HandlerAdapter#performOnData()} */
 				throw new BufferUnderflowException();
 			}
 		}
 
-
-		
-
+		/**
+		 * 从缓冲区中提取出指定的长度的缓冲
+		 * 
+		 * @param length
+		 * @param countTailingBytesToRemove		从尾部要删除的字节数目(分隔符数目)
+		 */
 		synchronized ByteBuffer[] extract(int length, int countTailingBytesToRemove) throws BufferUnderflowException {
 			ByteBuffer[] extracted = null;
 			
-			int size = size();
+			int size = size();	// 缓冲区大小
 					
+			// 有可能是读取的时候是根据长度来读取的
 			if (length == size) {
 				return drain();
 			}
@@ -667,13 +686,15 @@ final class ReadQueue {
 				throw new BufferUnderflowException();
 			}
 			
-			
+			// 根据长度提取出ByteBuffer
 			extracted = extractBuffers(length);
 
 			if (countTailingBytesToRemove > 0) {
+				// 忽略返回值, 移除"分隔符"
 				extractBuffers(countTailingBytesToRemove); // remove tailing bytes
 			}
 			
+			// 
 			compact();
 			
 			currentSize = null;
@@ -682,15 +703,11 @@ final class ReadQueue {
 			version++;
 			return extracted;
 		}
-		
-		
-		
-		
-		
-		
 
 		
 		/**
+		 * 返回分隔符的索引, 找不到返回-1		</br></br>
+		 * 
 		 * return the index of the delimiter or -1 if the delimiter has not been found 
 		 * 
 		 * @param delimiter         the delimiter
@@ -700,11 +717,11 @@ final class ReadQueue {
 		 * @throws MaxReadSizeExceededException if the max read size has been reached 
 		 */
 		public int retrieveIndexOf(byte[] delimiter, int maxReadSize) throws IOException, MaxReadSizeExceededException {
-
-			
-			ByteBuffer[] bufs = null;
+			ByteBuffer[] bufs = null;	// 临时变量保存当前的读缓冲
 			
 			// get the current buffers
+			// 读取当前的缓冲区
+			// 要取锁,防止在读取的过程中客户端发送新的数据过来
 			synchronized (this) {
 				if (buffers == null) {
 					return -1;
@@ -714,12 +731,13 @@ final class ReadQueue {
 				buffers = null;
 			}
 
-			
 			// .. scan it
+			// 扫描分隔符, 取得索引位置
 			int index = retrieveIndexOf(delimiter, bufs, maxReadSize);
 			
-			
 			// .. and return the buffers
+			// 取锁, 如果此时已经有新的数据进来(读缓冲区已经改变), 那么此时要将其加入到缓冲区的最前面
+			// 当前的缓冲区与后面的缓冲区合并
 			synchronized (this) {
 				addFirstSilence(bufs);
 			}
@@ -734,19 +752,22 @@ final class ReadQueue {
 
 		
 		private int retrieveIndexOf(byte[] delimiter, ByteBuffer[] buffers, int maxReadSize) {
-			Integer length = null;
+			Integer length = null;	// 接收的字节数目 - 分隔符字节数目 => 分隔符的索引位置
 
 			// is data available?
 			if (buffers == null) {
 				return -1;
 			}
 				
+			// 扫描分隔符
 			Index index = scanByDelimiter(buffers, delimiter);
 		
 			// index found?
+			// 是否已经找到
 			if (index.hasDelimiterFound()) {
 		
 				// ... within the max range?
+				// 在最大范围内
 				if (index.getReadBytes() <= maxReadSize) {
 					length = index.getReadBytes() - delimiter.length;
 
@@ -760,12 +781,15 @@ final class ReadQueue {
  				length = null;
 			}
 		
+			// 缓存Index
 			cachedIndex = index;
 
 
 			// delimiter not found (length is not set)
+			// 分隔符没有找到
 			if (length == null) {
 
+				// 是否达到最大字节
 				// check if max read size has been reached
 				if (index.getReadBytes() >= maxReadSize) {
 					return -2;
@@ -781,9 +805,12 @@ final class ReadQueue {
 		
 		
 
-
+		/**
+		 * 在buffers中扫描指定的分隔符
+		 */
 		private Index scanByDelimiter(ByteBuffer[] buffers, byte[] delimiter) {
 
+			// Index已经存在(以前扫描过的)
 			// does index already exists (-> former scan) &  same delimiter?
 			if ((cachedIndex != null) && (cachedIndex.isDelimiterEquals(delimiter))) {
 				// delimiter already found?
@@ -793,10 +820,13 @@ final class ReadQueue {
 				// 	.. no
 				} else {
 					// cached index available -> use index to find
+					// Cache Index已经存在 -> 使用index去查找
+					// Index保存了分隔符的信息
 					return find(buffers, cachedIndex);
 				}
 				
 			// ... no cached index -> find by delimiter
+			// 没有缓存的index, 根据分隔符查找
 			} else {
 				return find(buffers, delimiter);
 			}
@@ -823,11 +853,11 @@ final class ReadQueue {
 		}
 
 		  
-
+		// 根据长度提取ByteBuffers
 		private ByteBuffer[] extractBuffers(int length) {
 			ByteBuffer[] extracted = null;
 
-			int remainingToExtract = length;
+			int remainingToExtract = length;	// 剩余提取的大小
 			ByteBuffer buffer = null;
 
 			for (int i = 0; i < buffers.length; i++) {
@@ -840,27 +870,34 @@ final class ReadQueue {
 
 				
 				// can complete buffer be taken?
+				// 是否可以完全取出
 				int bufLength = buffer.limit() - buffer.position();
 				if (remainingToExtract >= bufLength) {
 
 					// write taken into out channel
+					// 数据的copy
 					extracted = appendBuffer(extracted, buffer);
 					remainingToExtract -= bufLength;
-					buffers[i] = null;
+					buffers[i] = null;	// 清空已经读取过的ByteBuffer
 
 				// .. no
 				} else {
 					int savedLimit = buffer.limit();
 
 					// extract the takenable
+					// 提取出可用的数据
 					buffer.limit(buffer.position() + remainingToExtract);
+					// 可用数据position~limit
 					ByteBuffer leftPart = buffer.slice();
 					extracted = appendBuffer(extracted, leftPart);
+					
 					buffer.position(buffer.limit());
 					buffer.limit(savedLimit);
+					// limit~capacity
 					ByteBuffer rightPart = buffer.slice();
 					
-					buffers[i] = rightPart;
+					// 可能为"分隔符"
+					buffers[i] = rightPart;	
 					remainingToExtract = 0;
 				}
 
@@ -873,6 +910,9 @@ final class ReadQueue {
 		}
 		
 
+		/**
+		 * 将数据copy到buffers中
+		 */
 		private static ByteBuffer[] appendBuffer(ByteBuffer[] buffers, ByteBuffer buffer) {
 			
 			if (buffers == null) {
@@ -890,9 +930,8 @@ final class ReadQueue {
 
 
 		
-				
+		// FIXME：		
 		private void compact() {
-
 			if ((buffers != null) && (buffers.length > THRESHOLD_COMPACT_BUFFER_COUNT_TOTAL)) {
 				
 				// count empty buffers
@@ -1006,9 +1045,9 @@ final class ReadQueue {
   			return find(bufferQueue, new Index(delimiter));
   		}
 
-
   		private Index find(ByteBuffer[] buffers, Index index) {
-
+  			// 找到第一个要被扫描的buffer
+  			// 如果有多个buffer,那么从前几个buffer中没有扫描到,那么就从最后一个开始扫描
   			int i = findFirstBufferToScan(buffers, index);
   			
   			for (; (i < buffers.length) && !index.hasDelimiterFound; i++) {
@@ -1019,11 +1058,14 @@ final class ReadQueue {
   				} 
 
   				// save current buffer positions
+  				// 保存当前的缓冲位置
   				int savedPos = buffer.position();
   				int savedLimit = buffer.limit();
   				
+  				// 在ByteBuffer中查找
   				findInBuffer(buffer, index);
   				
+  				// 恢复缓存位置
   				// restore buffer positions
   				buffer.position(savedPos);
   				buffer.limit(savedLimit);
@@ -1032,15 +1074,15 @@ final class ReadQueue {
   			return index;
   		}
 
-
   		private int findFirstBufferToScan(ByteBuffer[] buffers, Index index) {
-  			
   			int i = 0;
   			
   			// jump to next buffer which follows the cached one   
+  			// 跳到下一个缓冲区
   			if (index.lastScannedBuffer != null) {
   				
   				// find the last scanned buffer 
+  				// 找到最后一个扫描的buffer
   				for (int j = 0; j < buffers.length; j++) {
   					if (buffers[j] == index.lastScannedBuffer) {
   						i = j;
@@ -1050,10 +1092,12 @@ final class ReadQueue {
   				
   				
   				// position to next buffer
+  				// 要扫描的buffer的位置
   				i++;
   				
   				
   				// are there more buffers?
+  				// 是否还有更多的buffers
   				if (i >= buffers.length) {
   					// ...no, do nothing
   					return i;
@@ -1061,6 +1105,7 @@ final class ReadQueue {
   				
   				
   				// filter the empty buffers
+  				// 过滤空的buffers
   				for (int k = i; k < buffers.length; k++) {
   					if (buffers[k] != null) {
   						i = k;
@@ -1075,21 +1120,22 @@ final class ReadQueue {
   					return i;
   				}
   			}
+  			
   			return i;
   		}
 
   		
   		
   		private void findInBuffer(ByteBuffer buffer, Index index) {
-  			
+  			// 最后一次扫描的buffer
   			index.lastScannedBuffer = buffer;
   			int dataSize = buffer.remaining();
   			
-  			byte[] delimiter = index.delimiterBytes;
-  			int delimiterLength = index.delimiterLength;
-  			int delimiterPosition = index.delimiterPos;
-  			byte nextDelimiterByte = delimiter[delimiterPosition];
-  			boolean delimiterPartsFound = delimiterPosition > 0;
+  			byte[] delimiter = index.delimiterBytes;				// 分隔字节
+  			int delimiterLength = index.delimiterLength;			// 分隔符长度	
+  			int delimiterPosition = index.delimiterPos;				// 分隔位置
+  			byte nextDelimiterByte = delimiter[delimiterPosition];	// 单个的分隔字节
+  			boolean delimiterPartsFound = delimiterPosition > 0;	// 分隔符部分已经找到(匹配的第一个字节true,在后面的匹配过程中有可能会置为false)
   			
   			
   			for (int i = 0; i < dataSize; i++) {
@@ -1097,10 +1143,12 @@ final class ReadQueue {
   				byte b = buffer.get();
   				
   				// is current byte a delimiter byte?
+  				// 当前字节是否为一个分隔符字节
   				if (b == nextDelimiterByte) {
   					delimiterPosition++;
   					
   					// is single byte delimiter?
+  					// 分隔符是否只是一个字节, 是, 退出for循环, 退出该方法
   					if (delimiterLength  == 1) {
   						index.hasDelimiterFound = true;
   						index.delimiterPos = delimiterPosition;
@@ -1108,32 +1156,37 @@ final class ReadQueue {
   						return;
   					
   					// .. no, it is a multi byte delimiter
+  					// 多字节的分隔符
   					} else {
   						index.delimiterPos = delimiterPosition;
   						
   						// last delimiter byte found?
+  						// 最后的分隔符字节是否已经找到?
   						if (delimiterPosition == delimiterLength) {
   							index.hasDelimiterFound = true;
   							index.readBytes += (i + 1);
   							return;
   						}
   						
+  						// 下一个分隔符的字节
   						nextDelimiterByte = delimiter[delimiterPosition];
   					}
   					
   					delimiterPartsFound = true;
 
   				// byte doesn't match
+  				// 不匹配
   				} else {
   					
   					if (delimiterPartsFound) {
   						delimiterPosition = 0;
   						index.delimiterPos = 0;
   						nextDelimiterByte = delimiter[delimiterPosition];
+  						// 如果前面已经匹配上, 要置为false
   						delimiterPartsFound = false;
   						
-  						
   						// check if byte is equals to first delimiter byte 
+  						// 检查字节是否与第一个分隔符字节相等
   						if ((delimiterLength  > 1) && (b == nextDelimiterByte)) {
   							delimiterPosition++;
   							nextDelimiterByte = delimiter[delimiterPosition];
@@ -1148,35 +1201,43 @@ final class ReadQueue {
 	}
 	
 	
-		
-		
+	/**
+	 * 缓存分隔符
+	 */
 	private static final class Index implements Cloneable {
-			private boolean hasDelimiterFound = false;
-			private byte[] delimiterBytes = null;
-			private int delimiterLength = 0;
-			private int delimiterPos = 0;
-
+			private boolean hasDelimiterFound = false;	// 分隔符是否已经找到
+			private byte[] delimiterBytes = null;		// 分隔符字节
+			private int delimiterLength = 0;			// 分隔符长度
+			private int delimiterPos = 0;				// 分隔符位置(在最先找到分隔符的ByteBuffer)
 			
 			// consumed bytes
 			private int readBytes = 0;
 					
-			
 			// cache support
-			ByteBuffer lastScannedBuffer = null;
+			// 缓存支持：最后扫描的ByteBuffer
+			/*
+			 * 扫描分隔符的时候从最后一次的ByteBuffer开始.
+			 * eg：
+			 * 第一次发送：h
+			 * 第二次发送：a
+			 * 第三次发送：h
+			 * 第四次发送：a
+			 * 
+			 * 因为第一、二、三次都没有指定的分隔符(已经扫描过), 那么就从最后一次(第四次)开始扫描
+			 */
+			/** {@link Queue#findInBuffer(ByteBuffer, Index)} */
+			ByteBuffer lastScannedBuffer = null;	
 
-					
 			
 			Index(byte[] delimiterBytes) {
 				this.delimiterBytes = delimiterBytes;
 				this.delimiterLength =  delimiterBytes.length;
 			}
 			
-
 			public boolean hasDelimiterFound() {
 				return hasDelimiterFound;
 			}
 		
-
 			public int getReadBytes() {
 				return readBytes;
 			}

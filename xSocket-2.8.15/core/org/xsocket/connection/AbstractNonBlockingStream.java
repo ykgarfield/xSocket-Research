@@ -49,7 +49,7 @@ import org.xsocket.MaxReadSizeExceededException;
 import org.xsocket.connection.IConnection.FlushMode;
 
 /**
- * 一个数据流的基本实现.		</br></br>
+ * 一个数据流的基本实现.提供了读/写操作的方法.		</br></br>
  * 
  * implementation base of a data stream.   
  * 
@@ -318,6 +318,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 
 
 	/**
+	 * 通知调用的方法的数据已经被读取了.	</br></br>
+	 * 
 	 * notification method which will be called after data has been read internally   
 	 * 
 	 * @param readBufs  the read buffers
@@ -537,6 +539,7 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 		
 		int version = getReadBufferVersion();
 		try {
+			// 从读缓冲读取数据
 			ByteBuffer[] buffers = readQueue.readByteBufferByDelimiter(delimiter.getBytes(encoding), maxLength);
 			return onRead(buffers);
 
@@ -806,6 +809,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 	
 
 	/**
+	 * 将数据写入target.		</br></br>
+	 * 
 	 * transfer the data of the this source channel to the given data sink
 	 * 
 	 * @param dataSink   the data sink
@@ -1204,7 +1209,9 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 		
 		if (size > 0) {
 			onPreWrite(size);
+			// 将数据追加到写缓冲
 			writeQueue.append(buffer);
+			// 如果设置了自动flush, 那么进行flush的操作
 			onWriteDataInserted();
 		}
 
@@ -1307,7 +1314,9 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 	}
 	
 	
-
+	/**
+	 * {@link #write(ByteBuffer)}
+	 */
 	private long transfer(ReadableByteChannel source, WritableByteChannel target, int chunkSize) throws IOException, ClosedChannelException {
 		ensureStreamIsOpenAndWritable();
 		
@@ -1325,6 +1334,8 @@ public abstract class AbstractNonBlockingStream implements WritableByteChannel, 
 
 				} else {
 					transferBuffer.flip();
+					// AbstractNonBlockingStream实现了WritableByteChannel接口, 并且覆写了write(ByteBuffer)方法
+					// 这里将数据写到WriteQueue中
 					target.write(transferBuffer.slice());
 				}
 

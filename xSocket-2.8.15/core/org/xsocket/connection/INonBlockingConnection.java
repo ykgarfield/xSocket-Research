@@ -40,7 +40,9 @@ import org.xsocket.IDataSource;
 import org.xsocket.MaxReadSizeExceededException;
 
 /**
- * 连接以非阻塞的方式访问底层的channel.		</br></br>
+ * 连接以非阻塞的方式访问底层的channel.		</br>
+ * 提供了读/写数据的能力.	</br>
+ * IDataSource：读.		IDataSink：写		</br></br>
  * 
  * A connection which accesses the underlying channel in a non-blocking manner. <br><br>
  *
