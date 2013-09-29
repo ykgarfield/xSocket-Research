@@ -42,7 +42,9 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 	}
 
 	/**
-	 * 读/写的操作都在 {@link AbstractNonBlockingStream } 类中实现.
+	 * 读/写的操作都在 {@link AbstractNonBlockingStream } 类中实现.		</br>
+	 * 
+	 * 接收的数据都是存放在ReadQueue中.
 	 */
 	@Override
 	public boolean onData(INonBlockingConnection nbc) throws IOException,
@@ -62,6 +64,9 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 		// 如果没有找到指定的分隔符,会抛出BufferUnderflowException异常
 		// 不过xSocket会吞掉这个异常
 		String data = nbc.readStringByDelimiter("\r\n");
+		
+		// 发送的消息为 he#ll#o#*
+		//String data = nbc.readStringByDelimiter("#*");
 		
 		System.out.println("从客户端接收到 : " + data);
 	
@@ -84,6 +89,7 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 	@Override
 	public boolean onIdleTimeout(INonBlockingConnection connection)
 			throws IOException {
+		System.out.println("idle timeout");
 		return true;
 	}
 
@@ -93,6 +99,7 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 	@Override
 	public boolean onConnectionTimeout(INonBlockingConnection connection)
 			throws IOException {
-		return true;
+		System.out.println("connection timeout");
+		return false;
 	}
 }

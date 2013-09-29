@@ -154,6 +154,7 @@ final class IoSocketHandler extends IoChainableHandler {
 	 */
     public void init(IIoHandlerCallback callbackHandler) throws IOException, SocketTimeoutException {
     	setPreviousCallback(callbackHandler);
+    	// 操作IoSocketDispatcher的selector变量
 		dispatcher.register(this, SelectionKey.OP_READ);
 	}
     
@@ -326,6 +327,7 @@ final class IoSocketHandler extends IoChainableHandler {
 			read += size;
 
 			/** {@link NonBlockingConnection.IoHandlerCallback} */
+			// 将数据添加到ReadQueue队列
 			getPreviousCallback().onData(received, size);
 			
 			/** {@link NonBlockingConnection.IoHandlerCallback} */

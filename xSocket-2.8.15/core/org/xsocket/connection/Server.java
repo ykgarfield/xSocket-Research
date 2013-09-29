@@ -93,6 +93,9 @@ public class Server implements IServer {
 	// workerpool
 	// 构造函数中设置
 	private ExecutorService defaultWorkerPool;
+	/**
+	 * {@link AbstractNonBlockingStream}：ReadQueue、WriteQueue
+	 */
 	private Executor workerpool;
 
 	
@@ -1292,6 +1295,7 @@ public class Server implements IServer {
 			this.server = server;
 		}
 		
+		@Override
 		public void run() {
 			try {
 				Thread.sleep(3000);

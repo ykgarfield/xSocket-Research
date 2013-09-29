@@ -16,7 +16,7 @@ import org.xsocket.connection.IServer;
 import org.xsocket.connection.Server;
 
 public class FileUpDownServer {
-	private static final String FOLDER = "D:\\我的\\图片\\猫\\";
+	private static final String FOLDER = "E:\\temp\\image\\";
 	
 	public static void main(String[] args) throws UnknownHostException, IOException {
 		IServer server = new Server(8989, new FileUpDownHandler());
@@ -27,46 +27,39 @@ public class FileUpDownServer {
 	private static class FileUpDownHandler implements IConnectHandler, IDataHandler {
 
 		@Override
-		public boolean onData(INonBlockingConnection connection)
+		public boolean onData(INonBlockingConnection con)
 				throws IOException, BufferUnderflowException,
 				ClosedChannelException, MaxReadSizeExceededException {
 			
-			String msg = connection.readStringByDelimiter("\r\n");
+			// 从ReadQueue中读取数据
+			String msg = con.readStringByDelimiter("\r\n");
 			System.out.println("receive msg : " + msg);
-			if (msg.startsWith("down")) {
-				System.out.println("start to down...");
+			
+			if (msg.startsWith("get")) {
+				System.out.println("start to download...");
 				// 下面文件的命令格式：down;文件名称;存放路径
 				String[] arr = msg.split(";");
-				if (arr.length != 3) {
-					System.out.println("usage : down;文件名称;存放路径 ");
+				if (arr.length != 2) {
+					System.out.println("usage : down;文件名称 ");
 				}
 				
 				String fileName = arr[1];
-				String savePath = arr[2];
-				String fullName = FOLDER + fileName;
-				String saveFullName = savePath + File.separator + fileName;
+				String fullName = FOLDER + fileName;						// 要下载的文件
 				File file = new File(fullName);
 				
 				RandomAccessFile from = new RandomAccessFile(fullName, "r");
-				RandomAccessFile to = new RandomAccessFile(saveFullName, "rw");
 				if(!file.exists()) {
 					System.out.println("file not exists");
 				}
 				
-				System.out.println(fullName + " down to " + saveFullName);
-				
 				FileChannel fc = from.getChannel();
-				int writer = (int) connection.transferFrom(fc);
-				System.out.println(writer + " bytes read");
-				
-				FileChannel toFc = to.getChannel();
-				connection.transferTo(toFc, writer);
+				con.write(fc.size());					// 先写入文件大小
+				long writer = con.transferFrom(fc);		// 再写入文件的内容
+				System.out.println(writer + " bytes read.");
+				con.flush();
 				
 				fc.close();
 				from.close();
-				toFc.close();
-				to.close();
-				
 			} else {
 				System.out.println("unknow cmd");
 			}

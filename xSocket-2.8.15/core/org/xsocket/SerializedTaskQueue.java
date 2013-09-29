@@ -41,6 +41,8 @@ public final class SerializedTaskQueue  {
 	private static final Logger LOG = Logger.getLogger(SerializedTaskQueue.class.getName());
 
 	// 任务队列,需要进行同步
+	// 这里使用LinkedList会降低性能, 这里使用的是addLast()加入一个任务
+	// 每添加一个任务就会进行一次同步的操作
 	private final LinkedList<Runnable> multithreadedTaskQueue = new LinkedList<Runnable>();
 	
 	private final ReentrantLock processLock = new ReentrantLock(false);
@@ -114,6 +116,7 @@ public final class SerializedTaskQueue  {
 	
 		// add task to queue
 		// 将任务加入到队列
+		// XXX：总是得进行同步的操作
 		synchronized (multithreadedTaskQueue) {
 			
 			// (Multithreaded) worker is not running

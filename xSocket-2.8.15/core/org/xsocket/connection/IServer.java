@@ -114,6 +114,7 @@ public interface IServer extends Runnable, Closeable {
 	public static final int DEFAULT_READ_TRANSFER_PREALLOCATION_SIZE = 65536;
 	/** 默认读/传输预分配最小值  */
 	public static final int DEFAULT_READ_TRANSFER_PREALLOCATION_MIN_SIZE = 64; 
+	/** 读传输是否使用直接内存分配  */
 	public static final boolean DEFAULT_READ_TRANSFER_USE_DIRECT = true;
 
 	

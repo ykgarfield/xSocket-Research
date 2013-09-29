@@ -19,7 +19,8 @@ public class XSocketServer {
 		IServer srv = new Server(PORT, new ServerHandler());
 		// 设置当前的采用的异步模式
 		srv.setFlushmode(FlushMode.ASYNC);
-		//srv.setConnectionTimeoutMillis(3 * 1000);
+		srv.setIdleTimeoutMillis(2 * 1000);
+		srv.setConnectionTimeoutMillis(3 * 1000);
 		
 		try {
 			// 

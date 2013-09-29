@@ -282,6 +282,8 @@ public final class DataConverter {
 	
 
 	/**
+	 * 将给定的ByteBuffer的数组转成String.		</br></br>
+	 * 
 	 * converts the given array of ByteBuffers into String
 	 * 
 	 * @param buffers the array of ByteBuffer to convert
@@ -459,6 +461,8 @@ public final class DataConverter {
 	
 	
 	/**
+	 * 将一个ByteBuffer数组转为一个byte数组.		</br></br>
+	 * 
 	 * converts a ByteBuffer array to a byte array
 	 * 
 	 * @param buffers the ByteBuffer array to convert
@@ -475,7 +479,7 @@ public final class DataConverter {
 
 		
 		byte[][] bs = new byte[buffers.length][]; 
-		int size = 0;
+		int size = 0;	// ByteBuffer数组中的数据大小
 
 		// transform ByteBuffer -> byte[]
 		for (int i = 0; i < buffers.length; i++) {
@@ -504,6 +508,8 @@ public final class DataConverter {
 	
 	
 	/**
+	 * 将ByteBuffer转为Byte数组.		</br></br>
+	 * 
 	 * converts a ByteBuffer into a byte array
 	 * 
 	 * @param buffer the ByteBuffer to convert

@@ -93,7 +93,7 @@ final class WriteQueue implements Cloneable {
 		
 	
 	/**
-	 * 加ByteBuffer加入到这个队列.	</br></br>
+	 * 将ByteBuffer加入到这个队列.	</br></br>
 	 * 
 	 * append a byte buffer to this queue.
 	 *
