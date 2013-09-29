@@ -68,6 +68,9 @@ public class ServerHandler implements IDataHandler, IConnectHandler,
 		// 发送的消息为 he#ll#o#*
 		//String data = nbc.readStringByDelimiter("#*");
 		
+		// 发送的消息为 he#ll#o#*
+		//String data = nbc.readStringByDelimiter("#*");
+		
 		System.out.println("从客户端接收到 : " + data);
 	
 		// 设置为自动刷新
